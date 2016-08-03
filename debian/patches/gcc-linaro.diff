@@ -1,0 +1,7 @@
+# DP: Changes for the Linaro 5-2016.xx release.
+
+LANG=C git diff 3e5774f831e9eca881babb16108038af1d444690 4c4566ae0c0962f52ccb4270c9c111dd17c6ac1a \
+ | egrep -v '^(diff|index) ' \
+ | filterdiff --strip=1 --addoldprefix=a/src/  --addnewprefix=b/src/ \
+ | sed 's,a/src//dev/null,/dev/null,'
+
