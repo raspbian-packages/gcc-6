@@ -1,0 +1,13 @@
+Index: b/src/libphobos/configure.ac
+===================================================================
+--- a/src/libphobos/configure.ac
++++ b/src/libphobos/configure.ac
+@@ -167,7 +167,7 @@ AC_SUBST(phobos_toolexecdir)
+ AC_SUBST(phobos_toolexeclibdir)
+ 
+ # Default case for install directory for D sources files.
+-gdc_include_dir='${libdir}/gcc/${target_alias}'/${d_gcc_ver}/include/d
++gdc_include_dir='${libdir}/gcc-cross/${target_alias}'/${d_gcc_ver}/include/d
+ AC_SUBST(gdc_include_dir)
+ 
+ dnl Checks for header files.
