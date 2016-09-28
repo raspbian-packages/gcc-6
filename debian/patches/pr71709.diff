@@ -1,0 +1,22 @@
+# DP: Fix PR rtl-optimization/71709, taken from the trunk
+
+gcc/
+
+2016-07-01  Alan Modra  <amodra@gmail.com>
+
+	PR rtl-optimization/71709
+	* ira-lives.c (find_call_crossed_cheap_reg): Exit loop on arg reg
+	being set, not referenced.
+
+ 
+--- a/src/gcc/ira-lives.c
++++ b/src/gcc/ira-lives.c
+@@ -1014,7 +1014,7 @@
+ 		  break;
+ 		}
+ 
+-	      if (reg_overlap_mentioned_p (reg, PATTERN (prev)))
++	      if (reg_set_p (reg, prev))
+ 		break;
+ 	    }
+ 	  prev = PREV_INSN (prev);
