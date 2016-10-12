@@ -1,0 +1,18 @@
+#! /bin/sh
+
+set -e
+
+# see #779503, base version (60) + go version (1.6)
+prio=66
+
+case "$1" in
+    configure)
+	update-alternatives \
+	    --install /usr/bin/go go /usr/bin/go-@BV@ $prio \
+	    --slave /usr/bin/gofmt gofmt /usr/bin/gofmt-@BV@
+	;;
+esac
+
+#DEBHELPER#
+
+exit 0
