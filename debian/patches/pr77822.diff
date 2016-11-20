@@ -1,0 +1,104 @@
+# DP: Fix PR target/77822 (AArch64), taken from the trunk.
+
+gcc/
+2016-11-07  Kyrylo Tkachov  <kyrylo.tkachov@arm.com>
+
+	PR target/77822
+	* config/aarch64/aarch64.md (*tb<optab><mode>1): Use
+	aarch64_simd_shift_imm_<mode> predicate for operand 1.
+	(<optab>, ANY_EXTRACT): Use tighter predicates on operands 2 and 3
+	to restrict them to an appropriate range and add FAIL check if the
+	region they specify is out of range.  Delete useless constraint
+	strings.
+	(*<optab><mode>, ANY_EXTRACT): Add appropriate predicates on operands
+	2 and 3 to restrict their range and add pattern predicate.
+
+gcc/testsuite/
+
+2016-11-07  Kyrylo Tkachov  <kyrylo.tkachov@arm.com>
+
+	PR target/77822
+	* g++.dg/torture/pr77822.C: New test.
+
+ 
+--- a/src/gcc/testsuite/g++.dg/torture/pr77822.C
++++ b/src/gcc/testsuite/g++.dg/torture/pr77822.C
+@@ -0,0 +1,30 @@
++// PR target/77822
++// { dg-do compile }
++
++using UINT8 = char;
++using UINT32 = int;
++using UINT64 = long;
++class A
++{
++  void m_fn1 ();
++  struct B
++  {
++    UINT32 m_multiplier;
++  };
++  UINT8 m_datawidth;
++  UINT8 m_subunits;
++  B m_subunit_infos[];
++};
++int a;
++UINT64 b;
++void
++A::m_fn1 ()
++{
++  int c = 32, d = m_datawidth / c;
++  for (int e = 0; e < d; e++)
++    {
++      UINT32 f = e * 32;
++      if (b >> f & 1)
++	m_subunit_infos[m_subunits].m_multiplier = a;
++    }
++}
+--- a/src/gcc/config/aarch64/aarch64.md
++++ b/src/gcc/config/aarch64/aarch64.md
+@@ -639,7 +639,8 @@
+   [(set (pc) (if_then_else
+ 	      (EQL (zero_extract:DI (match_operand:GPI 0 "register_operand" "r")
+ 				    (const_int 1)
+-				    (match_operand 1 "const_int_operand" "n"))
++				    (match_operand 1
++				      "aarch64_simd_shift_imm_<mode>" "n"))
+ 		   (const_int 0))
+ 	     (label_ref (match_operand 2 "" ""))
+ 	     (pc)))
+@@ -4268,19 +4269,28 @@
+ 
+ (define_expand "<optab>"
+   [(set (match_operand:DI 0 "register_operand" "=r")
+-	(ANY_EXTRACT:DI (match_operand:DI 1 "register_operand" "r")
+-			(match_operand 2 "const_int_operand" "n")
+-			(match_operand 3 "const_int_operand" "n")))]
++	(ANY_EXTRACT:DI (match_operand:DI 1 "register_operand")
++			(match_operand 2
++			  "aarch64_simd_shift_imm_offset_di")
++			(match_operand 3 "aarch64_simd_shift_imm_di")))]
+   ""
+-  ""
++  {
++    if (!IN_RANGE (INTVAL (operands[2]) + INTVAL (operands[3]),
++		   1, GET_MODE_BITSIZE (DImode) - 1))
++     FAIL;
++  }
+ )
+ 
++
+ (define_insn "*<optab><mode>"
+   [(set (match_operand:GPI 0 "register_operand" "=r")
+ 	(ANY_EXTRACT:GPI (match_operand:GPI 1 "register_operand" "r")
+-			 (match_operand 2 "const_int_operand" "n")
+-			 (match_operand 3 "const_int_operand" "n")))]
+-  ""
++			 (match_operand 2
++			   "aarch64_simd_shift_imm_offset_<mode>" "n")
++			 (match_operand 3
++			   "aarch64_simd_shift_imm_<mode>" "n")))]
++  "IN_RANGE (INTVAL (operands[2]) + INTVAL (operands[3]),
++	     1, GET_MODE_BITSIZE (<MODE>mode) - 1)"
+   "<su>bfx\\t%<w>0, %<w>1, %3, %2"
+   [(set_attr "type" "bfm")]
+ )
