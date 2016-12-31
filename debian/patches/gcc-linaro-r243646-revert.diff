@@ -1,0 +1,88 @@
+# Revert r243646 for Linaro builds, already backported to the Linaro branch.
+
+2016-12-14  Wilco Dijkstra  <wdijkstr@arm.com>
+	    Jakub Jelinek  <jakub@redhat.com>
+
+	PR target/78796
+	* config/aarch64/aarch64.c (aarch64_classify_symbol): Merge large
+	model checks into switch.
+
+2016-12-14  Jakub Jelinek  <jakub@redhat.com>
+
+	PR target/78796
+	* gcc.dg/tls/pr78796.c: New test.
+
+ 
+--- a/src/gcc/testsuite/gcc.dg/tls/pr78796.c
++++ b/src/gcc/testsuite/gcc.dg/tls/pr78796.c
+@@ -1,32 +0,0 @@
+-/* PR target/78796 */
+-/* { dg-do run } */
+-/* { dg-options "-O2" } */
+-/* { dg-additional-options "-mcmodel=large" { target aarch64-*-* } } */
+-/* { dg-require-effective-target tls } */
+-
+-struct S { int a, b, c, d, e; };
+-struct S t;
+-__thread struct S s;
+-
+-__attribute__((used, noinline, noclone)) void
+-foo (int *x, int *y)
+-{
+-  asm volatile ("" : : "g" (x), "g" (y) : "memory");
+-  if (*x != 1 || *y != 2)
+-    __builtin_abort ();
+-}
+-
+-__attribute__((used, noinline, noclone)) void
+-bar (void)
+-{
+-  foo (&t.c, &s.c);
+-}
+-
+-int
+-main ()
+-{
+-  t.c = 1;
+-  s.c = 2;
+-  bar ();
+-  return 0;
+-}
+--- a/src/gcc/config/aarch64/aarch64.c
++++ b/src/gcc/config/aarch64/aarch64.c
+@@ -9280,6 +9280,18 @@
+ 
+   if (GET_CODE (x) == SYMBOL_REF)
+     {
++      if (aarch64_cmodel == AARCH64_CMODEL_LARGE)
++	{
++	  /* This is alright even in PIC code as the constant
++	     pool reference is always PC relative and within
++	     the same translation unit.  */
++	  if (nopcrelative_literal_loads
++	      && CONSTANT_POOL_ADDRESS_P (x))
++	    return SYMBOL_SMALL_ABSOLUTE;
++	  else
++	    return SYMBOL_FORCE_TO_MEM;
++	}
++
+       if (aarch64_tls_symbol_p (x))
+ 	return aarch64_classify_tls_symbol (x);
+ 
+@@ -9320,16 +9332,6 @@
+ 		    ?  SYMBOL_SMALL_GOT_28K : SYMBOL_SMALL_GOT_4G);
+ 	  return SYMBOL_SMALL_ABSOLUTE;
+ 
+-	case AARCH64_CMODEL_LARGE:
+-	  /* This is alright even in PIC code as the constant
+-	     pool reference is always PC relative and within
+-	     the same translation unit.  */
+-	  if (nopcrelative_literal_loads
+-	      && CONSTANT_POOL_ADDRESS_P (x))
+-	    return SYMBOL_SMALL_ABSOLUTE;
+-	  else
+-	    return SYMBOL_FORCE_TO_MEM;
+-
+ 	default:
+ 	  gcc_unreachable ();
+ 	}
