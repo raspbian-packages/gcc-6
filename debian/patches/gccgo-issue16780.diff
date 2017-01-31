@@ -19,7 +19,7 @@ Index: b/src/gcc/config/s390/s390.c
 ===================================================================
 --- a/src/gcc/config/s390/s390.c
 +++ b/src/gcc/config/s390/s390.c
-@@ -14971,6 +14971,7 @@ s390_vector_alignment (const_tree type)
+@@ -14973,6 +14973,7 @@ s390_vector_alignment (const_tree type)
  static void
  s390_asm_file_start (void)
  {

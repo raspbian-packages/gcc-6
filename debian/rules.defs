@@ -929,11 +929,11 @@ ifneq (,$(findstring gccgo, $(PKGSOURCE)))
   with_libcc1 :=
 endif
 
-go_no_cpus := avr arm hppa m68k sh4
+go_no_cpus := avr arm hppa sh4
 ifeq (,$(filter $(distrelease),lenny etch squeeze dapper hardy jaunty karmic lucid maverick natty oneiric))
   go_no_cpus := $(filter-out arm, $(go_no_cpus))
 endif
-go_no_systems := gnu kfreebsd-gnu
+go_no_systems := kfreebsd
 
 ifneq ($(with_base_only),yes)
   ifneq ($(separate_lang),yes)
@@ -943,7 +943,7 @@ endif
 ifneq (,$(filter $(DEB_TARGET_ARCH_CPU),$(go_no_cpus)))
   with_go := disabled for cpu $(DEB_TARGET_ARCH_CPU)
 endif
-ifneq (,$(findstring $(DEB_TARGET_GNU_SYSTEM),$(go_no_systems)))
+ifneq (,$(findstring $(DEB_TARGET_ARCH_OS),$(go_no_systems)))
   with_go := disabled for system $(DEB_TARGET_GNU_SYSTEM)
 endif
 ifeq ($(go_no_cross)-$(DEB_CROSS),yes-yes)

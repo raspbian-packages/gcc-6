@@ -49,7 +49,7 @@ Index: b/src/gcc/config/rs6000/rs6000.c
 ===================================================================
 --- a/src/gcc/config/rs6000/rs6000.c
 +++ b/src/gcc/config/rs6000/rs6000.c
-@@ -28533,7 +28533,8 @@ rs6000_output_function_epilogue (FILE *f
+@@ -28596,7 +28596,8 @@ rs6000_output_function_epilogue (FILE *f
        if (lang_GNU_C ()
  	  || ! strcmp (language_string, "GNU GIMPLE")
  	  || ! strcmp (language_string, "GNU Go")

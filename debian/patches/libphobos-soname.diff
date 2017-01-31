@@ -1,7 +1,0 @@
-# DP: Use a Debian policy compliant soname for the shared libphobos library.
-
---- a/src/libphobos/PHOBOS_VERSION
-+++ b/src/libphobos/PHOBOS_VERSION
-@@ -1 +1 @@
---release 2.068
-+-version-info 68:0:0

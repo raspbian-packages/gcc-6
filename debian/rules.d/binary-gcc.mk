@@ -140,11 +140,15 @@ ifeq ($(unprefixed_names),yes)
 	    $(d_gcc)/$(PF)/bin/$$i$(pkg_ver); \
 	done
   ifneq ($(GFDL_INVARIANT_FREE),yes)
-	for i in gcc gcov gcc-ar gcc-nm gcc-ranlib; do \
-	  ln -sf $(cmd_prefix)gcc$(pkg_ver).1 \
-	    $(d_gcc)/$(PF)/share/man/man1/$$i$(pkg_ver).1; \
+	for i in gcc gcov gcov-tool; do \
+	  ln -sf $(cmd_prefix)$$i$(pkg_ver).1.gz \
+	    $(d_gcc)/$(PF)/share/man/man1/$$i$(pkg_ver).1.gz; \
 	done
   endif
+	for i in gcc-ar gcc-nm gcc-ranlib; do \
+	  ln -sf $(cmd_prefix)$$i$(pkg_ver).1.gz \
+	    $(d_gcc)/$(PF)/share/man/man1/$$i$(pkg_ver).1.gz; \
+	done
 endif
 
 #	dh_installdebconf

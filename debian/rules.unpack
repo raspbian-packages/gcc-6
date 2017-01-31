@@ -175,6 +175,7 @@ ifeq ($(GFDL_INVARIANT_FREE),yes)
 	  touch $(srcdir)/$$i; \
 	done
 	rm -f $(srcdir)/INSTALL/*.html
+	rm -f $(srcdir)/zlib/contrib/dotzlib/DotZLib.chm
   endif
 endif
 	echo "$(gcc_tarball) unpacked." > $@

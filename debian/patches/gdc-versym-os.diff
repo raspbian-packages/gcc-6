@@ -77,9 +77,9 @@ Index: b/src/gcc/config/darwin.h
 ===================================================================
 --- a/src/gcc/config/darwin.h
 +++ b/src/gcc/config/darwin.h
-@@ -934,4 +934,10 @@ extern void darwin_driver_init (unsigned
-    fall-back default.  */
- #define DEF_MIN_OSX_VERSION "10.5"
+@@ -977,4 +977,10 @@ extern void darwin_driver_init (unsigned
+ #define DEF_LD64 LD64_VERSION
+ #endif
  
 +#define TARGET_OS_D_BUILTINS()					\
 +    do {							\

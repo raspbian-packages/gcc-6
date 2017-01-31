@@ -63,7 +63,7 @@ Index: b/src/configure.ac
 ===================================================================
 --- a/src/configure.ac
 +++ b/src/configure.ac
-@@ -171,6 +171,8 @@ target_libraries="target-libgcc \
+@@ -172,6 +172,8 @@ target_libraries="target-libgcc \
  		target-libssp \
  		target-libquadmath \
  		target-libgfortran \
@@ -72,7 +72,7 @@ Index: b/src/configure.ac
  		target-boehm-gc \
  		${libgcj} \
  		target-libobjc \
-@@ -1371,6 +1373,7 @@ if test "${build}" != "${host}" ; then
+@@ -1372,6 +1374,7 @@ if test "${build}" != "${host}" ; then
    GCJ_FOR_BUILD=${GCJ_FOR_BUILD-gcj}
    GFORTRAN_FOR_BUILD=${GFORTRAN_FOR_BUILD-gfortran}
    GOC_FOR_BUILD=${GOC_FOR_BUILD-gccgo}
@@ -80,7 +80,7 @@ Index: b/src/configure.ac
    DLLTOOL_FOR_BUILD=${DLLTOOL_FOR_BUILD-dlltool}
    LD_FOR_BUILD=${LD_FOR_BUILD-ld}
    NM_FOR_BUILD=${NM_FOR_BUILD-nm}
-@@ -1385,6 +1388,7 @@ else
+@@ -1386,6 +1389,7 @@ else
    GCJ_FOR_BUILD="\$(GCJ)"
    GFORTRAN_FOR_BUILD="\$(GFORTRAN)"
    GOC_FOR_BUILD="\$(GOC)"
@@ -88,7 +88,7 @@ Index: b/src/configure.ac
    DLLTOOL_FOR_BUILD="\$(DLLTOOL)"
    LD_FOR_BUILD="\$(LD)"
    NM_FOR_BUILD="\$(NM)"
-@@ -3311,6 +3315,7 @@ AC_SUBST(DLLTOOL_FOR_BUILD)
+@@ -3318,6 +3322,7 @@ AC_SUBST(DLLTOOL_FOR_BUILD)
  AC_SUBST(GCJ_FOR_BUILD)
  AC_SUBST(GFORTRAN_FOR_BUILD)
  AC_SUBST(GOC_FOR_BUILD)
@@ -96,7 +96,7 @@ Index: b/src/configure.ac
  AC_SUBST(LDFLAGS_FOR_BUILD)
  AC_SUBST(LD_FOR_BUILD)
  AC_SUBST(NM_FOR_BUILD)
-@@ -3421,6 +3426,7 @@ NCN_STRICT_CHECK_TARGET_TOOLS(GCC_FOR_TA
+@@ -3428,6 +3433,7 @@ NCN_STRICT_CHECK_TARGET_TOOLS(GCC_FOR_TA
  NCN_STRICT_CHECK_TARGET_TOOLS(GCJ_FOR_TARGET, gcj)
  NCN_STRICT_CHECK_TARGET_TOOLS(GFORTRAN_FOR_TARGET, gfortran)
  NCN_STRICT_CHECK_TARGET_TOOLS(GOC_FOR_TARGET, gccgo)
@@ -104,7 +104,7 @@ Index: b/src/configure.ac
  
  ACX_CHECK_INSTALLED_TARGET_TOOL(AR_FOR_TARGET, ar)
  ACX_CHECK_INSTALLED_TARGET_TOOL(AS_FOR_TARGET, as)
-@@ -3456,6 +3462,8 @@ GCC_TARGET_TOOL(gfortran, GFORTRAN_FOR_T
+@@ -3463,6 +3469,8 @@ GCC_TARGET_TOOL(gfortran, GFORTRAN_FOR_T
  		[gcc/gfortran -B$$r/$(HOST_SUBDIR)/gcc/], fortran)
  GCC_TARGET_TOOL(gccgo, GOC_FOR_TARGET, GOC,
  		[gcc/gccgo -B$$r/$(HOST_SUBDIR)/gcc/], go)

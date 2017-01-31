@@ -1143,7 +1143,7 @@ Index: b/src/configure.ac
 ===================================================================
 --- a/src/configure.ac
 +++ b/src/configure.ac
-@@ -147,6 +147,11 @@ libgcj="target-libffi \
+@@ -148,6 +148,11 @@ libgcj="target-libffi \
  	target-zlib \
  	target-libjava"
  
@@ -1155,7 +1155,7 @@ Index: b/src/configure.ac
  # these libraries are built for the target environment, and are built after
  # the host libraries and the host tools (which may be a cross compiler)
  # Note that libiberty is not a target library.
-@@ -170,6 +175,7 @@ target_libraries="target-libgcc \
+@@ -171,6 +176,7 @@ target_libraries="target-libgcc \
  		${libgcj} \
  		target-libobjc \
  		target-libada \

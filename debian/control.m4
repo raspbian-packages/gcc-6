@@ -5188,8 +5188,6 @@ Description: Phobos D standard library (debug symbols)
 
 Package: lib64gphobos`'PV-dev`'LS
 Architecture: ifdef(`TARGET',`CROSS_ARCH',`biarch64_archs')
-ifdef(`MULTIARCH', `Multi-Arch: same
-')`'dnl
 Section: libdevel
 Priority: ifdef(`TARGET',`extra',PRI(optional))
 Depends: BASELDEP, lib64gphobos`'PHOBOS_V`'LS (>= ${gdc:Version}),
@@ -5204,8 +5202,6 @@ Description: Phobos D standard library (64bit development files)
 Package: lib64gphobos`'PHOBOS_V`'LS
 Section: ifdef(`TARGET',`devel',`libs')
 Architecture: ifdef(`TARGET',`CROSS_ARCH',`biarch64_archs')
-ifdef(`MULTIARCH', `Multi-Arch: same
-')`'dnl
 Priority: ifdef(`TARGET',`extra',PRI(optional))
 Depends: BASELDEP, ${shlibs:Depends}, ${misc:Depends}
 BUILT_USING`'dnl
@@ -5217,8 +5213,6 @@ Description: Phobos D standard library (runtime library)
 Package: lib64gphobos`'PHOBOS_V-dbg`'LS
 Section: debug
 Architecture: ifdef(`TARGET',`CROSS_ARCH',`biarch64_archs')
-ifdef(`MULTIARCH', `Multi-Arch: same
-')`'dnl
 Priority: extra
 Depends: BASELDEP, lib64gphobos`'PHOBOS_V`'LS (= ${gdc:Version}), ${misc:Depends}
 BUILT_USING`'dnl
@@ -5229,8 +5223,6 @@ Description: Phobos D standard library (debug symbols)
 
 Package: lib32gphobos`'PV-dev`'LS
 Architecture: ifdef(`TARGET',`CROSS_ARCH',`biarch32_archs')
-ifdef(`MULTIARCH', `Multi-Arch: same
-')`'dnl
 Section: libdevel
 Priority: ifdef(`TARGET',`extra',PRI(optional))
 Depends: BASELDEP, lib32gphobos`'PHOBOS_V`'LS (>= ${gdc:Version}),
@@ -5245,8 +5237,6 @@ Description: Phobos D standard library (32bit development files)
 Package: lib32gphobos`'PHOBOS_V`'LS
 Section: ifdef(`TARGET',`devel',`libs')
 Architecture: ifdef(`TARGET',`CROSS_ARCH',`biarch32_archs')
-ifdef(`MULTIARCH', `Multi-Arch: same
-')`'dnl
 Priority: ifdef(`TARGET',`extra',PRI(optional))
 Depends: BASELDEP, ${shlibs:Depends}, ${misc:Depends}
 BUILT_USING`'dnl
@@ -5258,8 +5248,6 @@ Description: Phobos D standard library (runtime library)
 Package: lib32gphobos`'PHOBOS_V-dbg`'LS
 Section: debug
 Architecture: ifdef(`TARGET',`CROSS_ARCH',`biarch32_archs')
-ifdef(`MULTIARCH', `Multi-Arch: same
-')`'dnl
 Priority: extra
 Depends: BASELDEP, lib32gphobos`'PHOBOS_V`'LS (= ${gdc:Version}), ${misc:Depends}
 BUILT_USING`'dnl
@@ -5271,8 +5259,6 @@ Description: Phobos D standard library (debug symbols)
 ifenabled(`libn32phobos',`
 Package: libn32gphobos`'PV-dev`'LS
 Architecture: ifdef(`TARGET',`CROSS_ARCH',`biarchn32_archs')
-ifdef(`MULTIARCH', `Multi-Arch: same
-')`'dnl
 Section: libdevel
 Priority: ifdef(`TARGET',`extra',PRI(optional))
 Depends: BASELDEP, libn32gphobos`'PHOBOS_V`'LS (>= ${gdc:Version}),
@@ -5287,8 +5273,6 @@ Description: Phobos D standard library (n32 development files)
 Package: libn32gphobos`'PHOBOS_V`'LS
 Section: ifdef(`TARGET',`devel',`libs')
 Architecture: ifdef(`TARGET',`CROSS_ARCH',`biarchn32_archs')
-ifdef(`MULTIARCH', `Multi-Arch: same
-')`'dnl
 Priority: ifdef(`TARGET',`extra',PRI(optional))
 Depends: BASELDEP, ${shlibs:Depends}, ${misc:Depends}
 BUILT_USING`'dnl
@@ -5300,8 +5284,6 @@ Description: Phobos D standard library (runtime library)
 Package: libn32gphobos`'PHOBOS_V-dbg`'LS
 Section: debug
 Architecture: ifdef(`TARGET',`CROSS_ARCH',`biarchn32_archs')
-ifdef(`MULTIARCH', `Multi-Arch: same
-')`'dnl
 Priority: extra
 Depends: BASELDEP, libn32gphobos`'PHOBOS_V`'LS (= ${gdc:Version}), ${misc:Depends}
 BUILT_USING`'dnl
@@ -5314,8 +5296,6 @@ Description: Phobos D standard library (debug symbols)
 ifenabled(`libx32phobos',`
 Package: libx32gphobos`'PV-dev`'LS
 Architecture: ifdef(`TARGET',`CROSS_ARCH',`biarchx32_archs')
-ifdef(`MULTIARCH', `Multi-Arch: same
-')`'dnl
 Section: libdevel
 Priority: ifdef(`TARGET',`extra',PRI(optional))
 Depends: BASELDEP, libx32gphobos`'PHOBOS_V`'LS (>= ${gdc:Version}),
@@ -5330,8 +5310,6 @@ Description: Phobos D standard library (x32 development files)
 Package: libx32gphobos`'PHOBOS_V`'LS
 Section: ifdef(`TARGET',`devel',`libs')
 Architecture: ifdef(`TARGET',`CROSS_ARCH',`biarchx32_archs')
-ifdef(`MULTIARCH', `Multi-Arch: same
-')`'dnl
 Priority: ifdef(`TARGET',`extra',PRI(optional))
 Depends: BASELDEP, ${shlibs:Depends}, ${misc:Depends}
 BUILT_USING`'dnl
@@ -5343,8 +5321,6 @@ Description: Phobos D standard library (runtime library)
 Package: libx32gphobos`'PHOBOS_V-dbg`'LS
 Section: debug
 Architecture: ifdef(`TARGET',`CROSS_ARCH',`biarchx32_archs')
-ifdef(`MULTIARCH', `Multi-Arch: same
-')`'dnl
 Priority: extra
 Depends: BASELDEP, libx32gphobos`'PHOBOS_V`'LS (= ${gdc:Version}), ${misc:Depends}
 BUILT_USING`'dnl
@@ -5357,8 +5333,6 @@ Description: Phobos D standard library (debug symbols)
 ifenabled(`armml',`
 Package: libhfgphobos`'PV-dev`'LS
 Architecture: ifdef(`TARGET',`CROSS_ARCH',`biarchhf_archs')
-ifdef(`MULTIARCH', `Multi-Arch: same
-')`'dnl
 Section: libdevel
 Priority: ifdef(`TARGET',`extra',PRI(optional))
 Depends: BASELDEP, libhfgphobos`'PHOBOS_V`'LS (>= ${gdc:Version}),
@@ -5373,8 +5347,6 @@ Description: Phobos D standard library (hard float ABI development files)
 Package: libhfgphobos`'PHOBOS_V`'LS
 Section: ifdef(`TARGET',`devel',`libs')
 Architecture: ifdef(`TARGET',`CROSS_ARCH',`biarchhf_archs')
-ifdef(`MULTIARCH', `Multi-Arch: same
-')`'dnl
 Priority: ifdef(`TARGET',`extra',PRI(optional))
 Depends: BASELDEP, ${shlibs:Depends}, ${misc:Depends}
 BUILT_USING`'dnl
@@ -5386,8 +5358,6 @@ Description: Phobos D standard library (runtime library)
 Package: libhfgphobos`'PHOBOS_V-dbg`'LS
 Section: debug
 Architecture: ifdef(`TARGET',`CROSS_ARCH',`biarchhf_archs')
-ifdef(`MULTIARCH', `Multi-Arch: same
-')`'dnl
 Priority: extra
 Depends: BASELDEP, libhfgphobos`'PHOBOS_V`'LS (= ${gdc:Version}), ${misc:Depends}
 BUILT_USING`'dnl
@@ -5398,8 +5368,6 @@ Description: Phobos D standard library (debug symbols)
 
 Package: libsfgphobos`'PV-dev`'LS
 Architecture: ifdef(`TARGET',`CROSS_ARCH',`biarchsf_archs')
-ifdef(`MULTIARCH', `Multi-Arch: same
-')`'dnl
 Section: libdevel
 Priority: ifdef(`TARGET',`extra',PRI(optional))
 Depends: BASELDEP, libsfgphobos`'PHOBOS_V`'LS (>= ${gdc:Version}),
@@ -5414,8 +5382,6 @@ Description: Phobos D standard library (soft float ABI development files)
 Package: libsfgphobos`'PHOBOS_V`'LS
 Section: ifdef(`TARGET',`devel',`libs')
 Architecture: ifdef(`TARGET',`CROSS_ARCH',`biarchsf_archs')
-ifdef(`MULTIARCH', `Multi-Arch: same
-')`'dnl
 Priority: ifdef(`TARGET',`extra',PRI(optional))
 Depends: BASELDEP, ${shlibs:Depends}, ${misc:Depends}
 BUILT_USING`'dnl
@@ -5427,8 +5393,6 @@ Description: Phobos D standard library (runtime library)
 Package: libsfgphobos`'PHOBOS_V-dbg`'LS
 Section: debug
 Architecture: ifdef(`TARGET',`CROSS_ARCH',`biarchsf_archs')
-ifdef(`MULTIARCH', `Multi-Arch: same
-')`'dnl
 Priority: extra
 Depends: BASELDEP, libsfgphobos`'PHOBOS_V`'LS (= ${gdc:Version}), ${misc:Depends}
 BUILT_USING`'dnl

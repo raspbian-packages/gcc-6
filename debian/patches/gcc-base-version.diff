@@ -5,14 +5,14 @@ Index: b/src/gcc/BASE-VER
 --- a/src/gcc/BASE-VER
 +++ b/src/gcc/BASE-VER
 @@ -1 +1 @@
--6.2.1
+-6.3.0
 +6
 Index: b/src/gcc/FULL-VER
 ===================================================================
 --- /dev/null
 +++ b/src/gcc/FULL-VER
 @@ -0,0 +1 @@
-+6.2.1
++6.3.0
 Index: b/src/gcc/Makefile.in
 ===================================================================
 --- a/src/gcc/Makefile.in
@@ -201,7 +201,7 @@ Index: b/src/gcc/configure.ac
      if test x$host != x$target; then
         libstdcxx_incdir="$target_alias/$libstdcxx_incdir"
      fi
-@@ -1739,6 +1739,7 @@ changequote([,])dnl
+@@ -1746,6 +1746,7 @@ changequote([,])dnl
  
  changequote(,)dnl
  gcc_BASEVER=`cat $srcdir/BASE-VER`
@@ -209,7 +209,7 @@ Index: b/src/gcc/configure.ac
  gcc_DEVPHASE=`cat $srcdir/DEV-PHASE`
  gcc_DATESTAMP=`cat $srcdir/DATESTAMP`
  if test -f $srcdir/REVISION ; then
-@@ -1749,12 +1750,12 @@ fi
+@@ -1756,12 +1757,12 @@ fi
  cat > plugin-version.h <<EOF
  #include "configargs.h"
  

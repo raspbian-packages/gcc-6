@@ -336,8 +336,8 @@ endif
 		usr/share/man/man1/$(cmd_prefix)gcc$(pkg_ver).1.gz usr/share/man/man1/$(cmd_prefix)gnatgcc.1.gz
 ifeq ($(unprefixed_names),yes)
 	dh_link -p$(p_gnat) \
-		usr/bin/$(cmd_prefix)gcc usr/bin/gnatgcc \
-		usr/share/man/man1/$(cmd_prefix)gcc.1.gz usr/share/man/man1/gnatgcc.1.gz
+		usr/bin/$(cmd_prefix)gcc$(pkg_ver) usr/bin/gnatgcc \
+		usr/share/man/man1/$(cmd_prefix)gcc$(pkg_ver).1.gz usr/share/man/man1/gnatgcc.1.gz
 endif
 	debian/dh_rmemptydirs -p$(p_gnat)
 

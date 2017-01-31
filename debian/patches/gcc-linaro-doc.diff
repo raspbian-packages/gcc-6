@@ -1,4 +1,4 @@
-# DP: Changes for the Linaro 6-2016.10 release (documentation).
+# DP: Changes for the Linaro 6-2017.01 release (documentation).
 
 --- a/src/gcc/doc/cpp.texi
 +++ b/src/gcc/doc/cpp.texi
@@ -11,6 +11,52 @@
  minor version and patch level are reset.  If you wish to use the
  predefined macros directly in the conditional, you will need to write it
  like this:
+--- a/src/gcc/doc/extend.texi
++++ b/src/gcc/doc/extend.texi
+@@ -11416,6 +11416,7 @@ instructions, but allow the compiler to schedule those calls.
+ * ARM iWMMXt Built-in Functions::
+ * ARM C Language Extensions (ACLE)::
+ * ARM Floating Point Status and Control Intrinsics::
++* ARM ARMv8-M Security Extensions::
+ * AVR Built-in Functions::
+ * Blackfin Built-in Functions::
+ * FR-V Built-in Functions::
+@@ -12260,6 +12261,35 @@ unsigned int __builtin_arm_get_fpscr ()
+ void __builtin_arm_set_fpscr (unsigned int)
+ @end smallexample
+ 
++@node ARM ARMv8-M Security Extensions
++@subsection ARM ARMv8-M Security Extensions
++
++GCC implements the ARMv8-M Security Extensions as described in the ARMv8-M
++Security Extensions: Requiremenets on Development Tools Engineering
++Specification, which can be found at
++@uref{http://infocenter.arm.com/help/topic/com.arm.doc.ecm0359818/ECM0359818_armv8m_security_extensions_reqs_on_dev_tools_1_0.pdf}.
++
++As part of the Security Extensions GCC implements two new function attributes:
++@code{cmse_nonsecure_entry} and @code{cmse_nonsecure_call}.
++
++As part of the Security Extensions GCC implements the intrinsics below.  FPTR
++is used here to mean any function pointer type.
++
++@smallexample
++cmse_address_info_t cmse_TT (void *)
++cmse_address_info_t cmse_TT_fptr (FPTR)
++cmse_address_info_t cmse_TTT (void *)
++cmse_address_info_t cmse_TTT_fptr (FPTR)
++cmse_address_info_t cmse_TTA (void *)
++cmse_address_info_t cmse_TTA_fptr (FPTR)
++cmse_address_info_t cmse_TTAT (void *)
++cmse_address_info_t cmse_TTAT_fptr (FPTR)
++void * cmse_check_address_range (void *, size_t, int)
++typeof(p) cmse_nsfptr_create (FPTR p)
++intptr_t cmse_is_nsfptr (FPTR)
++int cmse_nonsecure_caller (void)
++@end smallexample
++
+ @node AVR Built-in Functions
+ @subsection AVR Built-in Functions
+ 
 --- a/src/gcc/doc/fragments.texi
 +++ b/src/gcc/doc/fragments.texi
 @@ -156,15 +156,16 @@ variants.  And for some targets it is better to reuse an existing multilib
@@ -39,6 +85,78 @@
  sets up relations between two option sets rather than two options.  Here is an
  example to demo how we reuse libraries built in Thumb mode for applications built
  in ARM mode:
+--- a/src/gcc/doc/install.texi
++++ b/src/gcc/doc/install.texi
+@@ -1101,19 +1101,59 @@ sysv, aix.
+ 
+ @item --with-multilib-list=@var{list}
+ @itemx --without-multilib-list
+-Specify what multilibs to build.
+-Currently only implemented for arm*-*-*, sh*-*-* and x86-64-*-linux*.
++Specify what multilibs to build.  @var{list} is a comma separated list of
++values, possibly consisting of a single value.  Currently only implemented
++for arm*-*-*, sh*-*-* and x86-64-*-linux*.  The accepted values and meaning
++for each target is given below.
+ 
+ @table @code
+ @item arm*-*-*
+-@var{list} is either @code{default} or @code{aprofile}.  Specifying
+-@code{default} is equivalent to omitting this option while specifying
+-@code{aprofile} builds multilibs for each combination of ISA (@code{-marm} or
+-@code{-mthumb}), architecture (@code{-march=armv7-a}, @code{-march=armv7ve},
+-or @code{-march=armv8-a}), FPU available (none, @code{-mfpu=vfpv3-d16},
+-@code{-mfpu=neon}, @code{-mfpu=vfpv4-d16}, @code{-mfpu=neon-vfpv4} or
+-@code{-mfpu=neon-fp-armv8} depending on architecture) and floating-point ABI
+-(@code{-mfloat-abi=softfp} or @code{-mfloat-abi=hard}).
++@var{list} is one of@code{default}, @code{aprofile} or @code{rmprofile}.
++Specifying @code{default} is equivalent to omitting this option, ie. only the
++default runtime library will be enabled.  Specifying @code{aprofile} or
++@code{rmprofile} builds multilibs for a combination of ISA, architecture,
++FPU available and floating-point ABI.
++
++The table below gives the combination of ISAs, architectures, FPUs and
++floating-point ABIs for which multilibs are built for each accepted value.
++
++@multitable @columnfractions .15 .28 .30
++@item Option @tab aprofile @tab rmprofile
++@item ISAs
++@tab @code{-marm} and @code{-mthumb}
++@tab @code{-mthumb}
++@item Architectures@*@*@*@*@*@*
++@tab default architecture@*
++@code{-march=armv7-a}@*
++@code{-march=armv7ve}@*
++@code{-march=armv8-a}@*@*@*
++@tab default architecture@*
++@code{-march=armv6s-m}@*
++@code{-march=armv7-m}@*
++@code{-march=armv7e-m}@*
++@code{-march=armv8-m.base}@*
++@code{-march=armv8-m.main}@*
++@code{-march=armv7}
++@item FPUs@*@*@*@*@*
++@tab none@*
++@code{-mfpu=vfpv3-d16}@*
++@code{-mfpu=neon}@*
++@code{-mfpu=vfpv4-d16}@*
++@code{-mfpu=neon-vfpv4}@*
++@code{-mfpu=neon-fp-armv8}
++@tab none@*
++@code{-mfpu=vfpv3-d16}@*
++@code{-mfpu=fpv4-sp-d16}@*
++@code{-mfpu=fpv5-sp-d16}@*
++@code{-mfpu=fpv5-d16}@*
++@item floating-point@/ ABIs@*@*
++@tab @code{-mfloat-abi=soft}@*
++@code{-mfloat-abi=softfp}@*
++@code{-mfloat-abi=hard}
++@tab @code{-mfloat-abi=soft}@*
++@code{-mfloat-abi=softfp}@*
++@code{-mfloat-abi=hard}
++@end multitable
+ 
+ @item sh*-*-*
+ @var{list} is a comma separated list of CPU names.  These must be of the
 --- a/src/gcc/doc/invoke.texi
 +++ b/src/gcc/doc/invoke.texi
 @@ -573,6 +573,8 @@ Objective-C and Objective-C++ Dialects}.
@@ -50,7 +168,17 @@
  -march=@var{name}  -mcpu=@var{name}  -mtune=@var{name}}
  
  @emph{Adapteva Epiphany Options}
-@@ -9478,6 +9480,11 @@ Size of minimal partition for WHOPR (in estimated instructions).
+@@ -632,7 +634,8 @@ Objective-C and Objective-C++ Dialects}.
+ -mneon-for-64bits @gol
+ -mslow-flash-data @gol
+ -masm-syntax-unified @gol
+--mrestrict-it}
++-mrestrict-it @gol
++-mcmse}
+ 
+ @emph{AVR Options}
+ @gccoptlist{-mmcu=@var{mcu} -maccumulate-args -mbranch-cost=@var{cost} @gol
+@@ -9477,6 +9480,11 @@ Size of minimal partition for WHOPR (in estimated instructions).
  This prevents expenses of splitting very small programs into too many
  partitions.
  
@@ -62,7 +190,7 @@
  @item cxx-max-namespaces-for-diagnostic-help
  The maximum number of namespaces to consult for suggestions when C++
  name lookup fails for an identifier.  The default is 1000.
-@@ -12828,9 +12835,9 @@ These options are defined for AArch64 implementations:
+@@ -12827,9 +12835,9 @@ These options are defined for AArch64 implementations:
  @item -mabi=@var{name}
  @opindex mabi
  Generate code for the specified data model.  Permissible values
@@ -75,7 +203,7 @@
  
  The default depends on the specific target configuration.  Note that
  the LP64 and ILP32 ABIs are not link-compatible; you must compile your
-@@ -12855,25 +12862,24 @@ Generate little-endian code.  This is the default when GCC is configured for an
+@@ -12854,25 +12862,24 @@ Generate little-endian code.  This is the default when GCC is configured for an
  @item -mcmodel=tiny
  @opindex mcmodel=tiny
  Generate code for the tiny code model.  The program and its statically defined
@@ -108,7 +236,7 @@
  
  @item -momit-leaf-frame-pointer
  @itemx -mno-omit-leaf-frame-pointer
-@@ -12895,7 +12901,7 @@ of TLS variables.
+@@ -12894,7 +12901,7 @@ of TLS variables.
  @item -mtls-size=@var{size}
  @opindex mtls-size
  Specify bit size of immediate TLS offsets.  Valid values are 12, 24, 32, 48.
@@ -117,7 +245,7 @@
  
  @item -mfix-cortex-a53-835769
  @itemx -mno-fix-cortex-a53-835769
-@@ -12915,12 +12921,34 @@ corresponding flag to the linker.
+@@ -12914,12 +12921,34 @@ corresponding flag to the linker.
  
  @item -mlow-precision-recip-sqrt
  @item -mno-low-precision-recip-sqrt
@@ -158,7 +286,7 @@
  
  @item -march=@var{name}
  @opindex march
-@@ -12929,10 +12957,13 @@ more feature modifiers.  This option has the form
+@@ -12928,10 +12957,13 @@ more feature modifiers.  This option has the form
  @option{-march=@var{arch}@r{@{}+@r{[}no@r{]}@var{feature}@r{@}*}}.
  
  The permissible values for @var{arch} are @samp{armv8-a},
@@ -174,7 +302,7 @@
  enables the @samp{+crc} and @samp{+lse} features.
  
  The value @samp{native} is available on native AArch64 GNU/Linux and
-@@ -12956,18 +12987,18 @@ processors implementing the target architecture.
+@@ -12955,18 +12987,18 @@ processors implementing the target architecture.
  Specify the name of the target processor for which GCC should tune the
  performance of the code.  Permissible values for this option are:
  @samp{generic}, @samp{cortex-a35}, @samp{cortex-a53}, @samp{cortex-a57},
@@ -202,7 +330,7 @@
  
  Where none of @option{-mtune=}, @option{-mcpu=} or @option{-march=}
  are specified, the code is tuned to perform well across a range
-@@ -12987,12 +13018,6 @@ documented in the sub-section on
+@@ -12986,12 +13018,6 @@ documented in the sub-section on
  Feature Modifiers}.  Where conflicting feature modifiers are
  specified, the right-most feature is used.
  
@@ -215,7 +343,7 @@
  GCC uses @var{name} to determine what kind of instructions it can emit when
  generating assembly code (as if by @option{-march}) and to determine
  the target processor for which to tune for performance (as if
-@@ -13010,11 +13035,11 @@ across releases.
+@@ -13009,11 +13035,11 @@ across releases.
  This option is only intended to be useful when developing GCC.
  
  @item -mpc-relative-literal-loads
@@ -232,7 +360,7 @@
  
  @end table
  
-@@ -13042,12 +13067,14 @@ instructions.  This is on by default for all possible values for options
+@@ -13041,12 +13067,14 @@ instructions.  This is on by default for all possible values for options
  @item lse
  Enable Large System Extension instructions.  This is on by default for
  @option{-march=armv8.1-a}.
@@ -250,7 +378,7 @@
  
  @node Adapteva Epiphany Options
  @subsection Adapteva Epiphany Options
-@@ -13967,21 +13994,42 @@ name to determine what kind of instructions it can emit when generating
+@@ -13966,21 +13994,42 @@ name to determine what kind of instructions it can emit when generating
  assembly code.  This option can be used in conjunction with or instead
  of the @option{-mcpu=} option.  Permissible names are: @samp{armv2},
  @samp{armv2a}, @samp{armv3}, @samp{armv3m}, @samp{armv4}, @samp{armv4t},
@@ -300,16 +428,19 @@
  @option{-march=native} causes the compiler to auto-detect the architecture
  of the build computer.  At present, this feature is only supported on
  GNU/Linux, and not all architectures are recognized.  If the auto-detect
-@@ -14013,7 +14061,7 @@ Permissible names are: @samp{arm2}, @samp{arm250},
+@@ -14012,8 +14061,10 @@ Permissible names are: @samp{arm2}, @samp{arm250},
  @samp{generic-armv7-a}, @samp{cortex-a5}, @samp{cortex-a7}, @samp{cortex-a8},
  @samp{cortex-a9}, @samp{cortex-a12}, @samp{cortex-a15}, @samp{cortex-a17},
  @samp{cortex-a32}, @samp{cortex-a35}, @samp{cortex-a53}, @samp{cortex-a57},
 -@samp{cortex-a72}, @samp{cortex-r4},
 +@samp{cortex-a72}, @samp{cortex-a73}, @samp{cortex-r4},
  @samp{cortex-r4f}, @samp{cortex-r5}, @samp{cortex-r7}, @samp{cortex-r8},
++@samp{cortex-m33},
++@samp{cortex-m23},
  @samp{cortex-m7},
  @samp{cortex-m4},
-@@ -14035,7 +14083,8 @@ Permissible names are: @samp{arm2}, @samp{arm250},
+ @samp{cortex-m3},
+@@ -14034,7 +14085,8 @@ Permissible names are: @samp{arm2}, @samp{arm250},
  Additionally, this option can specify that GCC should tune the performance
  of the code for a big.LITTLE system.  Permissible names are:
  @samp{cortex-a15.cortex-a7}, @samp{cortex-a17.cortex-a7},
@@ -319,7 +450,7 @@
  
  @option{-mtune=generic-@var{arch}} specifies that GCC should tune the
  performance for a blend of processors within architecture @var{arch}.
-@@ -14165,9 +14214,12 @@ otherwise the default is @samp{R10}.
+@@ -14164,9 +14216,12 @@ otherwise the default is @samp{R10}.
  
  @item -mpic-data-is-text-relative
  @opindex mpic-data-is-text-relative
@@ -335,7 +466,7 @@
  
  @item -mpoke-function-name
  @opindex mpoke-function-name
-@@ -14277,10 +14329,10 @@ generating these instructions.  This option is enabled by default when
+@@ -14276,10 +14331,10 @@ generating these instructions.  This option is enabled by default when
  @opindex mno-unaligned-access
  Enables (or disables) reading and writing of 16- and 32- bit values
  from addresses that are not 16- or 32- bit aligned.  By default
@@ -350,7 +481,20 @@
  
  The ARM attribute @code{Tag_CPU_unaligned_access} is set in the
  generated object file to either true or false, depending upon the
-@@ -18082,7 +18134,7 @@ IEEE 754 floating-point data.
+@@ -14319,6 +14374,12 @@ Print CPU tuning information as comment in assembler file.  This is
+ an option used only for regression testing of the compiler and not
+ intended for ordinary use in compiling code.  This option is disabled
+ by default.
++
++@item -mcmse
++@opindex mcmse
++Generate secure code as per the "ARMv8-M Security Extensions: Requirements on
++Development Tools Engineering Specification", which can be found on
++@url{http://infocenter.arm.com/help/topic/com.arm.doc.ecm0359818/ECM0359818_armv8m_security_extensions_reqs_on_dev_tools_1_0.pdf}.
+ @end table
+ 
+ @node AVR Options
+@@ -18081,7 +18142,7 @@ IEEE 754 floating-point data.
  
  The @option{-mnan=legacy} option selects the legacy encoding.  In this
  case quiet NaNs (qNaNs) are denoted by the first bit of their trailing
@@ -411,7 +555,7 @@
  ARM target supports options to generate ARMv8.1 Adv.SIMD instructions.
  Some multilibs may be incompatible with these options.
  
-@@ -1597,10 +1615,43 @@ ARM target supports executing ARMv8.1 Adv.SIMD instructions.  Some
+@@ -1597,10 +1615,47 @@ ARM target supports executing ARMv8.1 Adv.SIMD instructions.  Some
  multilibs may be incompatible with the options needed.  Implies
  arm_v8_1a_neon_ok.
  
@@ -452,10 +596,14 @@
 +ARM target generates Thumb-1 code for @code{-mthumb} with
 +@code{CBZ} and @code{CBNZ} instructions available.
 +
++@item arm_cmse_ok
++ARM target supports ARMv8-M Security Extensions, enabled by the @code{-mcmse}
++option.
++
  @end table
  
  @subsubsection AArch64-specific attributes
-@@ -2066,6 +2117,28 @@ NEON support.  Only ARM targets support this feature, and only then
+@@ -2066,6 +2121,28 @@ NEON support.  Only ARM targets support this feature, and only then
  in certain modes; see the @ref{arm_neon_ok,,arm_neon_ok effective target
  keyword}.
  
@@ -484,7 +632,7 @@
  @item arm_neon_fp16
  NEON and half-precision floating point support.  Only ARM targets
  support this feature, and only then in certain modes; see
-@@ -2075,6 +2148,23 @@ the @ref{arm_neon_fp16_ok,,arm_neon_fp16_ok effective target keyword}.
+@@ -2075,6 +2152,23 @@ the @ref{arm_neon_fp16_ok,,arm_neon_fp16_ok effective target keyword}.
  arm vfp3 floating point support; see
  the @ref{arm_vfp3_ok,,arm_vfp3_ok effective target keyword}.
  

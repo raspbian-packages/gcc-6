@@ -27,7 +27,7 @@ Index: b/src/gcc/gcc.c
 +	{
 +	  char *cmd = XNEWVEC (char, 50 + strlen (*out_file));
 +
-+	  sprintf(cmd, "/bin/cat %s >&2", *out_file);
++	  sprintf(cmd, "/usr/bin/awk '{print \"%d:\", $0}' %s >&2", getpid(), *out_file);
 +	  fprintf(stderr, "=== BEGIN GCC DUMP ===\n");
 +	  fflush(stderr);
 +	  system(cmd);

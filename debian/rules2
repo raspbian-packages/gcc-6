@@ -394,6 +394,10 @@ ifeq ($(with_gcj),yes)
   endif
 endif
 
+ifeq ($(with_libphobos),yes)
+  CONFARGS += --with-target-system-zlib
+endif
+
 ifeq ($(with_objc)-$(with_objc_gc),yes-yes)
   CONFARGS += --enable-objc-gc=auto
 endif
@@ -539,6 +543,7 @@ ifeq ($(derivative),Ubuntu)
 endif
 
 ifneq (,$(findstring sparc-linux,$(DEB_TARGET_GNU_TYPE)))
+  CONFARGS += --with-cpu-32=ultrasparc
   ifeq ($(biarch64),yes)
     CONFARGS += --enable-targets=all
   endif
@@ -628,6 +633,7 @@ endif
 
 ifneq (,$(findstring mips-linux,$(DEB_TARGET_GNU_TYPE)))
   CONFARGS += --with-arch-32=mips32r2 --with-fp-32=xx
+  CONFARGS += --with-madd4=no
   ifeq ($(multilib),yes)
     ifeq ($(biarchn32)-$(biarch64),yes-yes)
       CONFARGS += --enable-targets=all
@@ -638,6 +644,7 @@ endif
 
 ifneq (,$(findstring mipsel-linux,$(DEB_TARGET_GNU_TYPE)))
   CONFARGS += --with-arch-32=mips32r2 --with-fp-32=xx
+  CONFARGS += --with-madd4=no
   ifeq ($(multilib),yes)
     ifeq ($(biarchn32)-$(biarch64),yes-yes)
       CONFARGS += --enable-targets=all
@@ -648,6 +655,7 @@ endif
 
 #FIXME: howto for mipsn32?
 ifneq (,$(findstring mips64el-linux-gnuabin32,$(DEB_TARGET_GNU_TYPE)))
+  CONFARGS += --with-madd4=no
   ifeq ($(multilib),yes)
     ifeq ($(biarchn32)-$(biarch32),yes-yes)
       CONFARGS += --enable-targets=all
@@ -658,6 +666,7 @@ ifneq (,$(findstring mips64el-linux-gnuabin32,$(DEB_TARGET_GNU_TYPE)))
 endif
 
 ifneq (,$(findstring mips64-linux-gnuabin32,$(DEB_TARGET_GNU_TYPE)))
+  CONFARGS += --with-madd4=no
   ifeq ($(multilib),yes)
     ifeq ($(biarchn32)-$(biarch32),yes-yes)
       CONFARGS += --enable-targets=all
@@ -670,6 +679,7 @@ endif
 ifneq (,$(findstring mips64el-linux-gnuabi64,$(DEB_TARGET_GNU_TYPE)))
   CONFARGS += --with-mips-plt
   CONFARGS += --with-arch-64=mips64r2
+  CONFARGS += --with-madd4=no
   ifeq ($(multilib),yes)
     ifeq ($(biarchn32)-$(biarch32),yes-yes)
       CONFARGS += --enable-targets=all
@@ -681,6 +691,7 @@ endif
 ifneq (,$(findstring mips64-linux-gnuabi64,$(DEB_TARGET_GNU_TYPE)))
   CONFARGS += --with-mips-plt
   CONFARGS += --with-arch-64=mips64r2
+  CONFARGS += --with-madd4=no
   ifeq ($(multilib),yes)
     ifeq ($(biarchn32)-$(biarch32),yes-yes)
       CONFARGS += --enable-targets=all
@@ -2313,12 +2324,12 @@ endif
 			$(if $(filter $(with_multiarch_lib),yes), \
 			  $(d)/$(PF)/lib/$(DEB_TARGET_MULTIARCH)/lib*.so.*) \
 			$(d)/$(PF)/lib*/gcj$(pkg_ver)*/lib*.so.* \
-			2>/dev/null | awk -F: '/RPATH=/ {print $$1}'); \
+			2>/dev/null | awk -F: '/R(UN)?PATH=/ {print $$1}'); \
 	do \
 	  case "$$i" in ecj1|*gij-*|*libjawt*|*libjvm*) continue; esac; \
 	  [ -h $$i ] && continue; \
 	  chrpath --delete $$i; \
-	  echo "removed RPATH: $$i"; \
+	  echo "removed RPATH/RUNPATH: $$i"; \
 	done
 
 	: # remove '*.la' and '*.lai' files, not shipped in any package.

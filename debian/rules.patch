@@ -15,9 +15,10 @@ series_file	?= $(patchdir)/series
 debian_patches = \
 	svn-updates \
 	libiberty-updates \
+	$(if $(with_linaro_branch),gcc-linaro-r244724-revert) \
+	$(if $(with_linaro_branch),gcc-linaro-r244242-revert) \
 	$(if $(with_linaro_branch),gcc-linaro) \
 	$(if $(with_linaro_branch),gcc-linaro-no-macros) \
-	$(if $(with_linaro_branch),linaro-issue2575) \
 
 #	svn-updates \
 
@@ -88,9 +89,7 @@ debian_patches += \
 	gcc-SOURCE_DATE_EPOCH-2 \
 	cmd-go-combine-gccgo-s-ld-and-ldShared-methods \
 	libjava-mips64el \
-	PR55947-revert \
 	gccgo-issue16780 \
-	pr77379 \
 	$(if $(with_linaro_branch),,vulcan-cpu) \
 	$(if $(with_linaro_branch),,vulcan-costs) \
 	libffi-pax \
@@ -101,7 +100,17 @@ debian_patches += \
 	libgo-rawClone-no-pt_regs \
 	libgo-elf-relocations-sparc64 \
 	libobjc-system-gc \
-
+	compress-debug-check \
+	pr77267 \
+	pr78774 \
+	CVE-2016-9840 \
+	CVE-2016-9841 \
+	CVE-2016-9842 \
+	CVE-2016-9843 \
+	libcc1-compiler-name \
+	mips-pr78176-add-mlxc1-sxc1 \
+	mips-loongson3a-use-fused-madd.d \
+	mips-madd4 \
 
 ifeq ($(libstdcxx_abi),new)
   debian_patches += libstdc++-functexcept
@@ -120,7 +129,7 @@ ifeq ($(with_ssp)-$(with_ssp_default),yes-yes)
     hardening_patches += gcc-default-ssp-strong
   endif
 endif
-ifeq ($(distribution),Ubuntu)
+ifneq (,$(filter $(derivative),Ubuntu))
   ifneq (,$(findstring gcc-6, $(PKGSOURCE)))
     hardening_patches += \
 	gcc-default-fortify-source \
@@ -132,6 +141,16 @@ ifeq ($(distribution),Ubuntu)
     ifeq ($(with_pie),yes)
       hardening_patches += \
 	bind_now_when_pie
+    else
+      hardening_patches += \
+	ignore-pie-specs-when-not-enabled
+    endif
+  endif
+else ifneq (,$(filter $(derivative),Debian))
+  ifneq (,$(findstring gcc-6, $(PKGSOURCE)))
+    ifneq ($(with_pie),yes)
+      hardening_patches += \
+	ignore-pie-specs-when-not-enabled
     endif
   endif
 endif
@@ -189,14 +208,12 @@ ifeq ($(with_d),yes)
   debian_patches += \
 	gdc-6 \
 	gdc-updates \
-	libphobos-soname \
 	libphobos-zlib \
 	gdc-versym-cpu \
 	gdc-versym-os \
 	gdc-frontend-posix \
 	gdc-base-version \
 	gdc-profiledbuild \
-	gdc-libphobos-link
 #	gdc-multiarch
   ifneq ($(GFDL_INVARIANT_FREE),yes)
     debian_patches += gdc-6-doc
@@ -222,6 +239,13 @@ ifeq ($(DEB_TARGET_ARCH),alpha)
   endif
 endif
 
+ifeq (,$(filter $(derivative),Ubuntu))
+  debian_patches += pr64735-headers
+  ifeq ($(DEB_TARGET_ARCH),armel)
+    debian_patches += pr64735
+  endif
+endif
+
 ifneq (,$(findstring $(DEB_TARGET_ARCH),arm armel armhf))
   debian_patches += libjava-armel-unwind
 endif
@@ -232,6 +256,10 @@ else ifeq ($(DEB_TARGET_ARCH),armel)
   ifneq (,$(filter $(distrelease),lucid maverick natty oneiric precise))
     debian_patches += gcj-arm-mode
   endif
+endif
+
+ifneq (,$(findstring mips, $(DEB_TARGET_ARCH)))
+  debian_patches += pr65618
 endif
 
 ifeq ($(DEB_TARGET_ARCH),powerpcspe)
@@ -276,6 +304,28 @@ endif
 
 ifeq ($(DEB_TARGET_ARCH_OS),hurd)
   debian_patches += hurd-changes
+  debian_patches += \
+		src_gcc_config_i386_gnu.h \
+		src_libgo_configure.ac \
+		src_libgo_runtime_go-caller.c \
+		src_libgo_go_net_sendfile_gnu.go \
+		src_libgo_go_net_sock_gnu.go \
+		src_libgo_go_net_sockopt_gnu.go \
+		src_libgo_go_net_sockoptip_gnu.go \
+		src_libgo_go_syscall_libcall_gnu_386.go \
+		src_libgo_go_syscall_libcall_gnu.go \
+		src_libgo_go_syscall_libcall_posix-1.go \
+		src_libgo_go_syscall_socket_gnu.go \
+		src_libgo_go_syscall_wait.c \
+		src_libgo_Makefile.am \
+		src_libgo_Makefile.in \
+		src_libgo_mksysinfo.sh \
+		src_libgo_runtime_getncpu-gnu.c \
+		src_libgo_runtime_netpoll.goc \
+		src_libgo_go_os_os_test.go \
+		src_libgo_go_syscall_syscall_gnu_test.go \
+		src_libgo_testsuite_gotest \
+		add-gnu-to-libgo-headers
 endif
 
 debian_patches += gcc-ice-dump
@@ -316,6 +366,9 @@ debian_patches += gcc-multilib-multiarch
 ifneq (,$(filter $(derivative),Ubuntu))
   ifeq (,$(filter $(distrelease),dapper hardy intrepid jaunty karmic lucid maverick))
     debian_patches += gcc-as-needed
+    ifeq (,$(filter $(distrelease),dapper hardy intrepid jaunty karmic lucid maverick precise trusty utopic vivid wily xenial yakkety))
+      debian_patches += gcc-as-needed-gold
+    endif
   endif
 else # Debian
     #debian_patches += gcc-as-needed
@@ -323,18 +376,16 @@ endif
 
 debian_patches += libgomp-kfreebsd-testsuite
 debian_patches += go-testsuite
-# FIXME: Still relevant?
-#debian_patches += pr61106
 
 # Ada patches needed for both the stable package and snapshot builds
 debian_patches += ada-749574
 debian_patches += ada-mips
-debian_patches += ada-bootstrap-compare
 ifeq ($(DEB_TARGET_ARCH),m68k)
   debian_patches += ada-m68k
   ifeq ($(with_ada),yes)
     debian_patches += m68k-revert-pr45144
   endif
+  debian_patches += gccgo-m68k
 endif
 
 # don't remove, this is regularly overwritten, see PR sanitizer/63958.

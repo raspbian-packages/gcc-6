@@ -1,9 +1,152 @@
-gcc-6 (6.2.1-5+rpi1) stretch-staging; urgency=medium
+gcc-6 (6.3.0-5+rpi1) stretch-staging; urgency=medium
 
   [changes brought forward from 6.1.1-1+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 11 May 2016 20:56:09 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Sun, 04 Dec 2016 00:46:50 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Tue, 31 Jan 2017 10:42:33 +0000
+
+gcc-6 (6.3.0-5) unstable; urgency=medium
+
+  * Update to SVN 20170124 (r244868) from the gcc-6-branch.
+    - Fix PR lto/69188, PR go/78763, PR target/78478 (RTEMS).
+  * Fix removing the RUNPATH from the asan, tsan, ubsan, cilkrts, gfortran
+    and gphobos runtime libraries.
+  * Let the gnatgcc symlinks point to the versioned names. Closes: #839209.
+  * Backport patches to disable madd4 instructions on mips* targets and
+    disable these by default (YunQiang Su). Closes. #852153.
+  * Update multiarch builds for a new sh3 target. Closes: #851869.
+
+ -- Matthias Klose <doko@debian.org>  Tue, 24 Jan 2017 14:48:12 +0100
+
+gcc-6 (6.3.0-4) unstable; urgency=medium
+
+  * Update to SVN 20170121 (r244748) from the gcc-6-branch.
+    - Fix PR target/77455 (AArch64), PR rtl-optimization/79121, PR ipa/79043,
+      PR ipa/71207, PR tree-optimization/72488, PR c++/77545, PR c++/77284.
+  * Fix gdc cross build.
+  * Fix symlinks to unprefixed man pages. Closes: #851886.
+  * Fix PR go/79037, proposed golang patch (John Paul Adrian Glaubitz).
+    Closes: #852091.
+
+ -- Matthias Klose <doko@debian.org>  Sat, 21 Jan 2017 18:51:03 +0100
+
+gcc-6 (6.3.0-3) unstable; urgency=medium
+
+  * Update to SVN 20170118 (r244586) from the gcc-6-branch.
+    - Fix PR tree-optimization/71055 (closes: #849032), PR driver/78863,
+      PR translation/78745, PR tree-optimization/78886,
+      PR tree-optimization/78428, PR libstdc++/78956, PR libstdc++/78991,
+      PR rtl-optimization/78255, PR target/78041 (ARM), PR pch/78970,
+      PR lto/79042, PR target/78900 (PPC), PR tree-optimization/78024,
+      PR sanitizer/65479 (PPC), PR c++/77812, PR libstdc++/78389,
+      PR libstdc++/78389, PR debug/78839, PR rtl-optimization/78617,
+      PR target/78253 (ARM), PR target/79044 (PPC), PR c++/78341, PR c++/78949,
+      PR c++/78693, PR c++/71182, PR fortran/78866, PR middle-end/50199.
+  * Always configure sparc builds --with-cpu-32=ultrasparc (James Clark).
+    Closes: #850250.
+  * Enable gccgo on m68k (John Paul Adrian Glaubitz). Closes: #850749.
+  * Reapply the fix for PR target/55947, and fix PR c++/72813, taken from
+    the trunk.
+  * Fix PR target/79044 (PPC), ICE (Bill Schmidt). Closes: #850777.
+  * Don't add the configured prefix to libcc1's compiler name.
+    Closes: #851146.
+  * Update the Linaro support to the 6.3-2017.01 snapshot.
+  * Apply the header changes for PR libstdc++/64735 on armel as well,
+    conditionalized to keep the headers unchanged for other architectures.
+    Closes: #851273.
+  * Install the unprefixed man pages for gcc-ar, -nm and ranlib.
+    Closes: #851698.
+
+ -- Matthias Klose <doko@debian.org>  Wed, 18 Jan 2017 20:02:20 +0100
+
+gcc-6 (6.3.0-2) unstable; urgency=medium
+
+  * Update gdc-driver-nophobos patch.
+
+ -- Matthias Klose <doko@debian.org>  Wed, 18 Jan 2017 20:44:43 +0100
+
+gcc-6 (6.3.0-1) unstable; urgency=medium
+
+  * GCC 6.3.0 release.
+  * Update to SVN 20161229 (r243959) from the gcc-6-branch.
+    - Fix PR c/77767, PR ipa/77905, PR translation/78922, PR fortran/78239.
+
+  [ Matthias Klose ]
+  * Backport proposed patch for PR libstdc++/64735. Closes: #727621.
+  * Configure --with-cpu-32=ultrasparc on sparc. Closes: #845461.
+  * Update gdc to the GCC-6 branch (20161222).
+  * Don't mark libphobos multilib packages as M-A: same.
+  * Configure libphobos builds with --with-target-system-zlib.
+  * Stop applying PR c++/77379.
+  * Fix ignoring dpkg's pie specs when pie is not enabled (James Clarke).
+    Closes: #849542.
+  * Apply proposed patch for PR rtl-optimization/65618. Addresses: #781457.
+  * Bump requirement on binutils to 2.27.90 (gold now implementing -z bndplt).
+
+  [ Samuel Thibault ]
+  * libgo fixup for program invocation name.
+
+ -- Matthias Klose <doko@debian.org>  Sat, 31 Dec 2016 04:46:10 +0100
+
+gcc-6 (6.2.1-7) unstable; urgency=medium
+
+  * GCC 6.3.0 release candidate.
+  * Update to SVN 20161215 (r243686, 6.2.1) from the gcc-6-branch.
+    - Fix PR libstdc++/78465, PR c++/78761, PR c++/78252, PR target/59874,
+      PR target/78796, PR tree-optimization/77673, PR target/72717 (PPC),
+      PR rtl-optimization/71496, PR c++/78701.
+  * Drop build dependency on g++-5.
+  * Fix PR c++/78774, proposed for the gcc-6-branch.
+  * Apply patches for zlib security issues CVE-2016-9840, CVE-2016-9841,
+    CVE-2016-9842, CVE-2016-9843.
+  * Ignore dpkg's pie specs when pie is not enabled. Addresses: #848129.
+
+ -- Matthias Klose <doko@debian.org>  Thu, 15 Dec 2016 22:43:42 +0100
+
+gcc-6 (6.2.1-6) unstable; urgency=high
+
+  * Update to SVN 20161212 (r243558, 6.2.1) from the gcc-6-branch.
+    - Fix PR target/78426 (SH), PR fortran/78500, PR target/78101 (PPC),
+      PR target/48863 (ARM32), PR inline-asm/70184, PR libstdc++/71856,
+      PR libstdc++/77459, PR libstdc++/78326, PR libstdc++/51960,
+      PR target/57438 (x86), PR target/77933 (ARM), PR c++/78550,
+      PR tree-optimization/78542, PR tree-optimization/78482, PR c++/71848,
+      PR middle-end/71762, PR tree-optimization/71575, PR bootstrap/78188,
+      PR tree-optimization/78224, PR tree-optimization/77646, PR target/77957,
+      PR middle-end/78540, PR rtl-optimization/78546, PR fortran/78298,
+      PR middle-end/69183, PR middle-end/78416, PR middle-end/67335,
+      PR middle-end/78419, PR rtl-optimization/78378, PR fortran/78299,
+      PR target/77834, PR target/78227, PR target/77834,
+      PR rtl-optimization/77919, PR rtl-optimization/77919, PR middle-end/78025,
+      PR fortran/77973, PR sanitizer/66343, PR fortran/77665,
+      PR middle-end/77624, PR target/77587, PR tree-optimization/78646,
+      PR target/72827, PR c++/78551, PR c++/78649, PR c++/72808, PR c++/77591,
+      PR c++/77739, PR c++/77285, PR c++/78089, PR c++/77467, PR c++/77722,
+      PR c++/77638, PR c++/77637, PR c++/77482, PR c++/77375, PR c++/71274,
+      PR c++/71515, PR c++/77907, PR c++/57728, PR fortran/78593,
+      PR fortran/77666, PR fortran/78443, PR libstdc++/70975,
+      PR libstdc++/71337, PR libstdc++/78111, PR rtl-optimization/77309,
+      PR target/77904 (ARM32).
+
+  [ Matthias Klose ]
+  * Fix dependency generation for libgphobos multilib builds.
+  * Install missing vecintrin.h header on s390x.
+  * Fix PR target/77267 (x86), taken from the trunk.
+  * Use --push-state/--pop-state for gold as well when linking libtsan.
+  * Fix the configure check for compressed debug section support in as and ld.
+    Enables the -gz option again. Taken from the trunk.
+  * In GCC ICE dumps, prefix each line with the PID of the driver.
+  * Stop ignoring the bootstrap comparison failures on mips targets now that
+    these are release architectures.
+
+  [ Svante Signell ]
+  * GNU/Hurd port for gccgo.
+
+  [ Iain Buclaw ]
+  * Use needsCodegen rather than isRoot for determining the static/extern of a
+    template symbol. Closes: #845377.
+
+ -- Matthias Klose <doko@debian.org>  Mon, 12 Dec 2016 16:53:57 +0100
 
 gcc-6 (6.2.1-5) unstable; urgency=medium
 
