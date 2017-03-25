@@ -35,14 +35,14 @@ dirs_gcc = \
 
 # XXX: what about triarch mapping?
 files_gcc = \
-	$(PF)/bin/$(cmd_prefix){gcc,gcov,gcov-tool}$(pkg_ver) \
+	$(PF)/bin/$(cmd_prefix){gcc,gcov,gcov-tool,gcov-dump}$(pkg_ver) \
 	$(PF)/bin/$(cmd_prefix)gcc-{ar,ranlib,nm}$(pkg_ver) \
 	$(PF)/share/man/man1/$(cmd_prefix)gcc-{ar,nm,ranlib}$(pkg_ver).1 \
 	$(gcc_lexec_dir)/{collect2,lto1,lto-wrapper} \
 	$(shell test -e $(d)/$(gcc_lib_dir)/SYSCALLS.c.X \
 		&& echo $(gcc_lib_dir)/SYSCALLS.c.X)
 
-ifeq ($(with_cc1),yes)
+ifeq ($(with_libcc1_plugin),yes)
     files_gcc += \
 	$(gcc_lib_dir)/plugin/libcc1plugin.so{,.0,.0.0.0}
 endif
@@ -127,15 +127,16 @@ ifeq ($(with_mpx),yes)
 		$(d_gcc)/$(docdir)/$(p_xbase)/mpx/changelog
 endif
 ifeq ($(with_cc1),yes)
-	rm -f $(d)/$(usr_lib)/libcc1.so
+	rm -f $(d)/$(PF)/lib/$(DEB_HOST_MULTIARCH)/libcc1.so
 	dh_link -p$(p_gcc) \
-		/$(usr_lib)/libcc1.so.$(CC1_SONAME) /$(gcc_lib_dir)/libcc1.so
+	    /$(PF)/lib/$(DEB_HOST_MULTIARCH)/libcc1.so.$(CC1_SONAME) \
+	    /$(gcc_lib_dir)/libcc1.so
 endif
 
 	$(dh_compat2) dh_movefiles -p$(p_gcc) $(files_gcc)
 
 ifeq ($(unprefixed_names),yes)
-	for i in gcc gcov gcov-tool gcc-ar gcc-nm gcc-ranlib; do \
+	for i in gcc gcov gcov-dump gcov-tool gcc-ar gcc-nm gcc-ranlib; do \
 	  ln -sf $(cmd_prefix)$$i$(pkg_ver) \
 	    $(d_gcc)/$(PF)/bin/$$i$(pkg_ver); \
 	done

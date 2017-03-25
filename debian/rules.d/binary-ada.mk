@@ -332,12 +332,20 @@ ifneq (,$(filter $(build_type), build-native cross-build-native))
 endif
 	: # keep this one unversioned, see Debian #802838.
 	dh_link -p$(p_gnat) \
-		usr/bin/$(cmd_prefix)gcc$(pkg_ver) usr/bin/$(cmd_prefix)gnatgcc \
-		usr/share/man/man1/$(cmd_prefix)gcc$(pkg_ver).1.gz usr/share/man/man1/$(cmd_prefix)gnatgcc.1.gz
+		usr/bin/$(cmd_prefix)gcc$(pkg_ver) usr/bin/$(cmd_prefix)gnatgcc
+ifneq ($(GFDL_INVARIANT_FREE),yes)
+	dh_link -p$(p_gnat) \
+		usr/share/man/man1/$(cmd_prefix)gcc$(pkg_ver).1.gz \
+		usr/share/man/man1/$(cmd_prefix)gnatgcc.1.gz
+endif
 ifeq ($(unprefixed_names),yes)
 	dh_link -p$(p_gnat) \
-		usr/bin/$(cmd_prefix)gcc$(pkg_ver) usr/bin/gnatgcc \
-		usr/share/man/man1/$(cmd_prefix)gcc$(pkg_ver).1.gz usr/share/man/man1/gnatgcc.1.gz
+		usr/bin/$(cmd_prefix)gcc$(pkg_ver) usr/bin/gnatgcc
+  ifneq ($(GFDL_INVARIANT_FREE),yes)
+	dh_link -p$(p_gnat) \
+		usr/share/man/man1/$(cmd_prefix)gcc$(pkg_ver).1.gz \
+		usr/share/man/man1/gnatgcc.1.gz
+  endif
 endif
 	debian/dh_rmemptydirs -p$(p_gnat)
 

@@ -1,16 +1,89 @@
-gcc-6 (6.3.0-6+rpi1) stretch-staging; urgency=medium
+gcc-6 (6.3.0-10+rpi1) stretch-staging; urgency=medium
 
   [changes brought forward from 6.1.1-1+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 11 May 2016 20:56:09 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Fri, 24 Feb 2017 22:33:50 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Sat, 25 Mar 2017 16:58:27 +0000
+
+gcc-6 (6.3.0-10) unstable; urgency=medium
+
+  * Update to SVN 20170321 (r246313) from the gcc-6-branch.
+    - Fix PR libstdc++/79980, PR libstdc++/80041, PR libstdc++/79980,
+      PR libstdc++/79511, PR target/71017 (x86).
+
+  [ Matthias Klose ]
+  * Update the Linaro support to the 6.3-2017.03 snapshot.
+  * Address PR c++/80091, reverting r246134. Closes: #858261.
+
+  [ Nicolas Boulenguez ]
+  * Reactive the ada-gcc-name patch, calling the versioned gcc.
+
+ -- Matthias Klose <doko@debian.org>  Tue, 21 Mar 2017 16:29:17 +0100
+
+gcc-6 (6.3.0-9) unstable; urgency=medium
+
+  * Update to SVN 20170316 (r246188) from the gcc-6-branch.
+    - Fix PR target/79261 (PPC), PR fortran/78474, PR libstdc++/79789,
+      PR target/79514 (x86), PR target/79544 (PPC), PR lto/79579,
+      PR target/79749 (sparc), PR target/79261 (PPC), PR fortran/78474,
+      PR fortran/78331, PR target/77850 (PA), PR target/79439 (PPC),
+      PR c++/79796, PR ada/79903, PR ada/79945, PR libstdc++/80034,
+      PR c++/79962, PR c++/79984, PR c/79756, PR tree-optimization/79732,
+      PR target/80019 (x86), PR target/79752 (PPC), PR middle-end/80004,
+      PR target/49244 (x86), PR tree-optimization/79977, PR middle-end/79971,
+      PR tree-optimization/79666, PR middle-end/79576, PR c++/72775,
+      PR c++/79900, PR c++/79687, PR c++/79264, PR c++/61636, PR fortran/79894.
+  * gcj-6: Fix ecj1 symlink on i386. Closes: #856903.
+  * Fix libcc1.so symlink for cross compilers. Addresses: #856875.
+  * dpkg-buildflags stopped fiddling around with spec files; remove
+    the code removing and warning about dpkg's specs.
+  * libstdc++6: Add break for libopenmpi1.6. Closes: #854881.
+  * Fix symlinks to man pages in the hppa64 package. Closes: #857583.
+  * Don't ship the gnatgcc manpage symlink when building GFDL packages.
+    Closes: #857384.
+  * Install the gcov-dump utility.
+  * Allow to use lld with -fuse-ld=ld.lld.
+
+ -- Matthias Klose <doko@debian.org>  Thu, 16 Mar 2017 14:25:48 +0100
+
+gcc-6 (6.3.0-8) unstable; urgency=medium
+
+  * Update to SVN 20170221 (r245621) from the gcc-6-branch.
+    - Fix ICEs PR middle-end/79537, PR sanitizer/79558, PR middle-end/79536.
+  * Fix ecj1 symlink for gcj cross compiler packages. Addresses: #855640.
+  * Bump binutils version requirement.
+
+ -- Matthias Klose <doko@debian.org>  Tue, 21 Feb 2017 14:54:53 +0100
+
+gcc-6 (6.3.0-7) unstable; urgency=medium
+
+  * Update to SVN 20170218 (r245414) from the gcc-6-branch.
+    - Fix PR target/78945 (ARM), PR translation/79397,
+      PR tree-optimization/71824, PR tree-optimization/71824,
+      PR tree-optimization/77318, PR target/71017 (x86), PR c++/78897,
+      PR c++/78908, PR c++/79296 (closes: #854692), PR sanitizer/79562,
+      PR libstdc++/79114, PR libstdc++/59170, PR libstdc++/59161,
+      PR libstdc++/72792, PR libstdc++/72792, PR libstdc++/72793,
+      PR libstdc++/69321, PR libstdc++/69301, PR libstdc++/79114,
+      PR libstdc++/78702, PR libstdc++/78134, PR libstdc++/78273,
+      PR c/79431, PR target 79545 (PPC), PR target/76731 (x86), PR c/79428,
+      PR tree-optimization/79411, PR c/79431, PR middle-end/79399,
+      PR tree-optimization/79338, PR target/79197 (PPC), PR target/79079,
+      PR tree-optimization/79267, PR target/79495 (x86), PR c/79471,
+      PR c++/79429, PR c/79431, PR c++/79377.
+  * Update the Linaro support to the 6.3-2017.02 snapshot.
+  * Fix target architecture for sparc non-multilib builds (Adrian Glaubitz).
+    Closes: #855197.
+  * Bump binutils version requirement.
+
+ -- Matthias Klose <doko@debian.org>  Sat, 18 Feb 2017 10:00:36 +0100
 
 gcc-6 (6.3.0-6) unstable; urgency=medium
 
   * Update to SVN 20170205 (r245197) from the gcc-6-branch.
     - Fix PR libstdc++/78346, PR libstdc++/79195, PR libstdc++/79254,
-      PR target/78478, PR target/79268 (PPC), PR tree-optimization/79034,
-      PR middle-end/78742, PR target/77439 (ARM32), PR c++/79176,
+      PR target/78478, PR target/79268 (PPC, LP: #1661051), PR c++/79176,
+      PR middle-end/78742, PR target/77439 (ARM32), PR tree-optimization/79034,
       PR fortran/70697, PR fortran/70696, PR fortran/79305, PR go/79037,
       PR go/79281 (closes: #853223), PR target/78862 (tilegx), PR lto/79061,
       PR target/65484 (PPC).

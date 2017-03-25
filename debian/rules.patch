@@ -15,8 +15,6 @@ series_file	?= $(patchdir)/series
 debian_patches = \
 	svn-updates \
 	libiberty-updates \
-	$(if $(with_linaro_branch),gcc-linaro-r244724-revert) \
-	$(if $(with_linaro_branch),gcc-linaro-r244242-revert) \
 	$(if $(with_linaro_branch),gcc-linaro) \
 	$(if $(with_linaro_branch),gcc-linaro-no-macros) \
 
@@ -34,6 +32,7 @@ ifneq ($(GFDL_INVARIANT_FREE),yes)
 	gcc-SOURCE_DATE_EPOCH-doc \
 	gcc-SOURCE_DATE_EPOCH-2-doc \
 	$(if $(with_linaro_branch),,vulcan-cpu-doc) \
+	gcc-fuse-ld-lld-doc \
 
 #	svn-doc-updates \
 #	$(if $(with_linaro_branch),,svn-doc-updates) \
@@ -111,6 +110,8 @@ debian_patches += \
 	mips-pr78176-add-mlxc1-sxc1 \
 	mips-loongson3a-use-fused-madd.d \
 	mips-madd4 \
+	gcc-fuse-ld-lld \
+	revert-r246134 \
 
 ifeq ($(libstdcxx_abi),new)
   debian_patches += libstdc++-functexcept
@@ -148,10 +149,10 @@ ifneq (,$(filter $(derivative),Ubuntu))
   endif
 else ifneq (,$(filter $(derivative),Debian))
   ifneq (,$(findstring gcc-6, $(PKGSOURCE)))
-    ifneq ($(with_pie),yes)
-      hardening_patches += \
-	ignore-pie-specs-when-not-enabled
-    endif
+#    ifneq ($(with_pie),yes)
+#      hardening_patches += \
+#	ignore-pie-specs-when-not-enabled
+#    endif
   endif
 endif
 
@@ -199,6 +200,7 @@ ifeq (,$(DEB_STAGE))
   #endif
 
   debian_patches += ada-link-shlib
+  debian_patches += ada-gcc-name
 #endif
 endif # DEB_STAGE
 

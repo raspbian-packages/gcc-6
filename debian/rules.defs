@@ -616,15 +616,20 @@ endif
 
 with_cc1 := yes
 with_cc1 := $(call envfilt, cc1, , , $(with_cc1))
+
 ifeq ($(with_cc1),yes)
-  ifneq ($(DEB_CROSS),yes)
-    ifeq ($(with_common_libs),yes)
-      with_libcc1 := yes
-    endif
+  ifeq ($(with_common_libs),yes)
+    with_libcc1 := yes
   endif
+  with_libcc1_plugin := yes
 endif
+
 ifneq (,$(with_rtlibs))
   with_libcc1 := disabled for rtlibs stage
+  with_libcc1_plugin := disabled for rtlibs stage
+endif
+ifneq (,$(findstring build-cross, $(build_type)))
+  with_libcc1 := disabled for cross builds
 endif
 
 # Build all packages needed for C development

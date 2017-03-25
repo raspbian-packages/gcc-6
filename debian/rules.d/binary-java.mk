@@ -85,7 +85,7 @@ dirs_gcj = \
 
 files_gcj = \
 	$(PF)/bin/$(cmd_prefix)gcj$(pkg_ver) \
-	$(gcc_lexec_dir)/{ecj1,jc1,jvgenmain}
+	$(gcc_lexec_dir)/{jc1,jvgenmain}
 
 # FIXME: this really should be included, or else the cross compiler
 # can only be used to build libjava itself.
@@ -278,17 +278,14 @@ $(binary_stamp)-gcj: $(install_stamp)
 	rm -rf $(d_gcj)
 	dh_installdirs -p$(p_gcj)  $(dirs_gcj)
 
-ifeq ($(DEB_CROSS),yes)
-	ln -sf ../../../gcc/$(DEB_HOST_GNU_TYPE)/$(BASE_VERSION)/ecj1 \
-		$(d)/$(gcc_lib_dir)/ecj1
-endif
 	$(dh_compat2) dh_movefiles -p$(p_gcj)  $(files_gcj)
 ifneq (,$(filter $(build_type), build-native cross-build-native))
 	mv $(d_gcj)/$(PF)/$(libdir)/libgcj.spec $(d_gcj)/$(gcc_lib_dir)/
 endif
 
 ifeq ($(with_external_ecj1),yes)
-	ln -sf ../../ecj1 $(d_gcj)/$(gcc_lexec_dir)/ecj1
+	dh_link -p$(p_gcj) \
+		/$(PF)/lib/$(DEB_HOST_MULTIARCH)/gcc/ecj1 /$(gcc_lexec_dir)/ecj1
 endif
 ifeq ($(unprefixed_names),yes)
 	ln -sf $(cmd_prefix)gcj$(pkg_ver) \

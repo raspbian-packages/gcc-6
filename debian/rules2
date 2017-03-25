@@ -544,9 +544,11 @@ ifeq ($(derivative),Ubuntu)
 endif
 
 ifneq (,$(findstring sparc-linux,$(DEB_TARGET_GNU_TYPE)))
-  CONFARGS += --with-cpu-32=ultrasparc
   ifeq ($(biarch64),yes)
     CONFARGS += --enable-targets=all
+    CONFARGS += --with-cpu-32=ultrasparc
+  else
+    CONFARGS += --with-cpu=ultrasparc
   endif
 endif
 
@@ -2117,7 +2119,7 @@ ifeq ($(with_hppa64),yes)
 	rm -rf $(d)/$(PF)/share/info
 	rm -rf $(d)/$(PF)/share/man
 	rm -f $(d)/$(PF)/$(libdir)/libiberty.a
-	rm -f $(d)/$(PF)/bin/*{gcov,gcov-tool,gccbug,gcc}
+	rm -f $(d)/$(PF)/bin/*{gcov,gcov-dump,gcov-tool,gccbug,gcc}
 
 	rm -rf $(d)/$(PF)/hppa64-linux-gnu/include
 	rm -rf $(d)/$(PF)/hppa64-linux-gnu/lib
@@ -2453,7 +2455,7 @@ $(install_hppa64_stamp): $(build_hppa64_stamp)
 	rm -rf $(d_hppa64)/$(PF)/lib/gcc/hppa64-linux-gnu/$(BASE_VERSION)/plugin
 	rm -f $(d_hppa64)/$(PF)/lib/libiberty.a
 	rm -f $(d_hppa64)/$(PF)/lib/libcc1.*
-	rm -f $(d_hppa64)/$(PF)/bin/*{gcov,gcov-tool,gccbug,gcc}
+	rm -f $(d_hppa64)/$(PF)/bin/*{gcov,gcov-dump,gcov-tool,gccbug,gcc}
 
 	rm -rf $(d_hppa64)/$(PF)/hppa64-linux-gnu
 	rm -rf $(d_hppa64)/$(PF)/lib/gcc/hppa64-linux-gnu/$(BASE_VERSION)/install-tools
@@ -2465,10 +2467,16 @@ ifeq ($(versioned_packages),yes)
 	done
 endif
 	mkdir -p $(d_hppa64)/$(PF)/share/man/man1
-	for i in cpp gcc-ar gcc-nm gcc-ranlib; do \
+	for i in gcc-ar gcc-nm gcc-ranlib; do \
 	  ln -sf $$i$(pkg_ver).1.gz \
 	    $(d_hppa64)/$(PF)/share/man/man1/hppa64-linux-gnu-$$i$(pkg_ver).1.gz; \
 	done
+ifneq ($(GFDL_INVARIANT_FREE),yes)
+	for i in cpp gcc; do \
+	  ln -sf $$i$(pkg_ver).1.gz \
+	    $(d_hppa64)/$(PF)/share/man/man1/hppa64-linux-gnu-$$i$(pkg_ver).1.gz; \
+	done
+endif
 
 	touch $(install_hppa64_stamp)
 
