@@ -1,0 +1,409 @@
+# DP: Address PR c++/80091, reverting r246134.
+
+Index: b/src/gcc/testsuite/ChangeLog
+===================================================================
+--- a/src/gcc/testsuite/ChangeLog
++++ b/src/gcc/testsuite/ChangeLog
+@@ -33,20 +33,6 @@
+ 	* g++.dg/expr/ptrmem8.C: New test.
+ 	* g++.dg/expr/ptrmem9.C: New test.
+ 
+-	Backported from mainline
+-	2017-01-31  Nathan Sidwell  <nathan@acm.org>
+-
+-	PR c++/79264
+-	* g++.dg/cpp1y/pr61636-1.C: Augment.
+-
+-	Backported from mainline
+-	2017-01-17  Nathan Sidwell  <nathan@acm.org>
+-
+-	PR c++/61636
+-	* g++.dg/cpp1y/pr61636-1.C: New.
+-	* g++.dg/cpp1y/pr61636-2.C: New.
+-	* g++.dg/cpp1y/pr61636-3.C: New.
+-
+ 2017-03-14  Marek Polacek  <polacek@redhat.com>
+ 
+ 	PR c++/79962
+Index: b/src/gcc/testsuite/g++.dg/cpp1y/pr61636-1.C
+===================================================================
+--- a/src/gcc/testsuite/g++.dg/cpp1y/pr61636-1.C
++++ b/src/gcc/testsuite/g++.dg/cpp1y/pr61636-1.C
+@@ -1,36 +0,0 @@
+-// PR c++/61636
+-// PR c++/79264
+-// { dg-do compile { target c++14 } }
+-
+-// ICE because we figure this capture too late.
+-
+-struct Base
+-{
+-  void Bar (int);
+-};
+-
+-struct A : Base {
+-  void b ();
+-  void Foo (int);
+-  using Base::Bar;
+-  template <typename T> void Baz (T);
+-};
+-
+-void A::b() {
+-
+-  auto lam = [&](auto asdf) { Foo (asdf); };
+-
+-  lam (0);
+-
+-  auto lam1 = [&](auto asdf) { Bar (asdf); };
+-
+-  lam1 (0);
+-
+-  auto lam2 = [&](auto asdf) { Baz (asdf); };
+-
+-  lam2 (0);
+-
+-  auto lam3 = [&](auto asdf) { Baz<int> (asdf); };
+-
+-  lam3 (0);
+-}
+Index: b/src/gcc/testsuite/g++.dg/cpp1y/pr61636-2.C
+===================================================================
+--- a/src/gcc/testsuite/g++.dg/cpp1y/pr61636-2.C
++++ b/src/gcc/testsuite/g++.dg/cpp1y/pr61636-2.C
+@@ -1,72 +0,0 @@
+-// PR c++/61636
+-// { dg-do run { target c++14 } }
+-
+-// Check we don't capture this (too) unnecessarily
+-
+-struct A {
+-  int b ();
+-  void f (int) {}
+-  static void f (double) {}
+-
+-  static void g (int) {}
+-  static void g (double) {}
+-};
+-
+-struct O {
+-  void x (int) {}
+-  static void x (double) {}
+-};
+-
+-namespace N {
+-  void y (double) {}
+-}
+-
+-int Check (bool expect, unsigned size)
+-{
+-  return (expect ? sizeof (void *) : 1) != size;
+-}
+-
+-int A::b() {
+-  int r = 0;
+-
+-  // one of the functions is non-static
+-  auto l0 = [&](auto z) { f (z); };
+-  r += Check (true, sizeof l0);
+-  l0(0.0); // doesn't need this capture for A::f(double), but too late
+-  l0 (0); // Needs this capture for A::f(int)
+-
+-  // no fn is non-static.
+-  auto l00 = [&](auto z) { g (z); };
+-  r += Check (false, sizeof l00);
+-  l00(0.0); 
+-  l00 (0);
+-
+-  // sizeof isn't an evaluation context, so no this capture
+-  auto l1 = [&](auto z) { sizeof (f (z), 1); };
+-  r += Check (false, sizeof l1);
+-  l1(0.0); l1 (0); 
+-
+-  auto l2 = [&](auto) { f (2.4); };
+-  auto l3 = [&](auto) { f (0); };
+-  l2(0); l3(0); l2(0.0); l3 (0.0);
+-  r += Check (false, sizeof l2);
+-  r += Check (true, sizeof l3);
+-
+-  auto l4 = [&](auto) { O::x (2.4); };
+-  auto l5 = [&](auto) { N::y (2.4); };
+-  auto l6 = [&](auto) { };
+-  l4(0); l5(0); l6(0);
+-  l4(0.0); l5(0.0); l6(0.0);
+-  r += Check (false, sizeof l4);
+-  r += Check (false, sizeof l5);
+-  r += Check (false, sizeof l6);
+-
+-  return r;
+-}
+-
+-int main ()
+-{
+-  A a;
+-
+-  return a.b () ? 1 : 0;
+-}
+Index: b/src/gcc/testsuite/g++.dg/cpp1y/pr61636-3.C
+===================================================================
+--- a/src/gcc/testsuite/g++.dg/cpp1y/pr61636-3.C
++++ b/src/gcc/testsuite/g++.dg/cpp1y/pr61636-3.C
+@@ -1,25 +0,0 @@
+-// PR c++/61636
+-// { dg-do compile { target c++14 } }
+-// permissiveness doesn't make this permitted
+-// { dg-additional-options "-fpermissive" }
+-
+-// ICE because we attempt to use dependent Foo during error recovery
+-// and die with an unexpected this capture need.
+-
+-template <typename T> struct Base
+-{
+-  void Foo (int);
+-};
+-
+-template <typename T> struct A : Base<T> {
+-  void b ();
+-};
+-
+-template <typename T> void A<T>::b() {
+-
+-  auto lam = [&](auto asdf) { Foo (asdf); }; // { dg-error "not declared" }
+-
+-  lam (T(0));
+-}
+-
+-template void A<int>::b ();
+Index: b/src/gcc/cp/ChangeLog
+===================================================================
+--- a/src/gcc/cp/ChangeLog
++++ b/src/gcc/cp/ChangeLog
+@@ -20,27 +20,6 @@
+ 	* init.c (constant_value_1): Break if the variable has a dynamic
+ 	initializer.
+ 
+-	Backported from mainline
+-	2017-01-31  Nathan Sidwell  <nathan@acm.org>
+-
+-	PR c++/79264
+-	* lambda.c (maybe_generic_this_capture): Deal with template-id-exprs.
+-	* semantics.c (finish_member_declaration): Assert class is being
+-	defined.
+-
+-	Backported from mainline
+-	2017-01-17  Nathan Sidwell  <nathan@acm.org>
+-
+-	PR c++/61636
+-	* cp-tree.h (maybe_generic_this_capture): Declare.
+-	* lambda.c (resolvable_dummy_lambda): New, broken out of ...
+-	(maybe_resolve_dummy): ... here.  Call it.
+-	(maybe_generic_this_capture): New.
+-	* parser.c (cp_parser_postfix_expression): Speculatively capture
+-	this in generic lambda in unresolved member function call.
+-	* pt.c (tsubst_copy_and_build): Force hard error from failed
+-	member function lookup in generic lambda.
+-
+ 2017-03-07  Marek Polacek  <polacek@redhat.com>
+ 
+ 	Backported from mainline
+Index: b/src/gcc/cp/pt.c
+===================================================================
+--- a/src/gcc/cp/pt.c
++++ b/src/gcc/cp/pt.c
+@@ -16615,34 +16615,19 @@ tsubst_copy_and_build (tree t,
+ 
+ 		if (unq != function)
+ 		  {
+-		    /* In a lambda fn, we have to be careful to not
+-		       introduce new this captures.  Legacy code can't
+-		       be using lambdas anyway, so it's ok to be
+-		       stricter.  */
+-		    bool in_lambda = (current_class_type
+-				      && LAMBDA_TYPE_P (current_class_type));
+-		    char const *msg = "%qD was not declared in this scope, "
+-		      "and no declarations were found by "
+-		      "argument-dependent lookup at the point "
+-		      "of instantiation";
+-
+-		    bool diag = true;
+-		    if (in_lambda)
+-		      error_at (EXPR_LOC_OR_LOC (t, input_location),
+-				msg, function);
+-		    else
+-		      diag = permerror (EXPR_LOC_OR_LOC (t, input_location),
+-					msg, function);
+-		    if (diag)
++		    tree fn = unq;
++		    if (INDIRECT_REF_P (fn))
++		      fn = TREE_OPERAND (fn, 0);
++		    if (TREE_CODE (fn) == COMPONENT_REF)
++		      fn = TREE_OPERAND (fn, 1);
++		    if (is_overloaded_fn (fn))
++		      fn = get_first_fn (fn);
++		    if (permerror (EXPR_LOC_OR_LOC (t, input_location),
++				   "%qD was not declared in this scope, "
++				   "and no declarations were found by "
++				   "argument-dependent lookup at the point "
++				   "of instantiation", function))
+ 		      {
+-			tree fn = unq;
+-			if (INDIRECT_REF_P (fn))
+-			  fn = TREE_OPERAND (fn, 0);
+-			if (TREE_CODE (fn) == COMPONENT_REF)
+-			  fn = TREE_OPERAND (fn, 1);
+-			if (is_overloaded_fn (fn))
+-			  fn = get_first_fn (fn);
+-
+ 			if (!DECL_P (fn))
+ 			  /* Can't say anything more.  */;
+ 			else if (DECL_CLASS_SCOPE_P (fn))
+@@ -16665,13 +16650,7 @@ tsubst_copy_and_build (tree t,
+ 			  inform (DECL_SOURCE_LOCATION (fn),
+ 				  "%qD declared here, later in the "
+ 				  "translation unit", fn);
+-			if (in_lambda)
+-			  {
+-			    release_tree_vector (call_args);
+-			    RETURN (error_mark_node);
+-			  }
+ 		      }
+-
+ 		    function = unq;
+ 		  }
+ 	      }
+Index: b/src/gcc/cp/semantics.c
+===================================================================
+--- a/src/gcc/cp/semantics.c
++++ b/src/gcc/cp/semantics.c
+@@ -2965,12 +2965,6 @@ finish_member_declaration (tree decl)
+   /* We should see only one DECL at a time.  */
+   gcc_assert (DECL_CHAIN (decl) == NULL_TREE);
+ 
+-  /* Don't add decls after definition.  */
+-  gcc_assert (TYPE_BEING_DEFINED (current_class_type)
+-	      /* We can add lambda types when late parsing default
+-		 arguments.  */
+-	      || LAMBDA_TYPE_P (TREE_TYPE (decl)));
+-
+   /* Set up access control for DECL.  */
+   TREE_PRIVATE (decl)
+     = (current_access_specifier == access_private_node);
+Index: b/src/gcc/cp/parser.c
+===================================================================
+--- a/src/gcc/cp/parser.c
++++ b/src/gcc/cp/parser.c
+@@ -6867,7 +6867,6 @@ cp_parser_postfix_expression (cp_parser
+ 			|| type_dependent_expression_p (fn)
+ 			|| any_type_dependent_arguments_p (args)))
+ 		  {
+-		    maybe_generic_this_capture (instance, fn);
+ 		    postfix_expression
+ 		      = build_nt_call_vec (postfix_expression, args);
+ 		    release_tree_vector (args);
+Index: b/src/gcc/cp/lambda.c
+===================================================================
+--- a/src/gcc/cp/lambda.c
++++ b/src/gcc/cp/lambda.c
+@@ -746,14 +746,16 @@ lambda_expr_this_capture (tree lambda, b
+   return result;
+ }
+ 
+-/* Return the current LAMBDA_EXPR, if this is a resolvable dummy
+-   object.  NULL otherwise..  */
++/* We don't want to capture 'this' until we know we need it, i.e. after
++   overload resolution has chosen a non-static member function.  At that
++   point we call this function to turn a dummy object into a use of the
++   'this' capture.  */
+ 
+-static tree
+-resolvable_dummy_lambda (tree object)
++tree
++maybe_resolve_dummy (tree object, bool add_capture_p)
+ {
+   if (!is_dummy_object (object))
+-    return NULL_TREE;
++    return object;
+ 
+   tree type = TYPE_MAIN_VARIANT (TREE_TYPE (object));
+   gcc_assert (!TYPE_PTR_P (type));
+@@ -763,63 +765,18 @@ resolvable_dummy_lambda (tree object)
+       && LAMBDA_TYPE_P (current_class_type)
+       && lambda_function (current_class_type)
+       && DERIVED_FROM_P (type, current_nonlambda_class_type ()))
+-    return CLASSTYPE_LAMBDA_EXPR (current_class_type);
+-
+-  return NULL_TREE;
+-}
+-
+-/* We don't want to capture 'this' until we know we need it, i.e. after
+-   overload resolution has chosen a non-static member function.  At that
+-   point we call this function to turn a dummy object into a use of the
+-   'this' capture.  */
+-
+-tree
+-maybe_resolve_dummy (tree object, bool add_capture_p)
+-{
+-  if (tree lam = resolvable_dummy_lambda (object))
+-    if (tree cap = lambda_expr_this_capture (lam, add_capture_p))
+-      if (cap != error_mark_node)
++    {
++      /* In a lambda, need to go through 'this' capture.  */
++      tree lam = CLASSTYPE_LAMBDA_EXPR (current_class_type);
++      tree cap = lambda_expr_this_capture (lam, add_capture_p);
++      if (cap && cap != error_mark_node)
+ 	object = build_x_indirect_ref (EXPR_LOCATION (object), cap,
+ 				       RO_NULL, tf_warning_or_error);
++    }
+ 
+   return object;
+ }
+ 
+-/* When parsing a generic lambda containing an argument-dependent
+-   member function call we defer overload resolution to instantiation
+-   time.  But we have to know now whether to capture this or not.
+-   Do that if FNS contains any non-static fns.
+-   The std doesn't anticipate this case, but I expect this to be the
+-   outcome of discussion.  */
+-
+-void
+-maybe_generic_this_capture (tree object, tree fns)
+-{
+-  if (tree lam = resolvable_dummy_lambda (object))
+-    if (!LAMBDA_EXPR_THIS_CAPTURE (lam))
+-      {
+-	/* We've not yet captured, so look at the function set of
+-	   interest.  */
+-	if (BASELINK_P (fns))
+-	  fns = BASELINK_FUNCTIONS (fns);
+-	bool id_expr = TREE_CODE (fns) == TEMPLATE_ID_EXPR;
+-	if (id_expr)
+-	  fns = TREE_OPERAND (fns, 0);
+-	for (; fns; fns = OVL_NEXT (fns))
+-	  {
+-	    tree fn = OVL_CURRENT (fns);
+-
+-	    if ((!id_expr || TREE_CODE (fn) == TEMPLATE_DECL)
+-		&& DECL_NONSTATIC_MEMBER_FUNCTION_P (fn))
+-	      {
+-		/* Found a non-static member.  Capture this.  */
+-		lambda_expr_this_capture (lam, true);
+-		break;
+-	      }
+-	  }
+-      }
+-}
+-
+ /* Returns the innermost non-lambda function.  */
+ 
+ tree
+Index: b/src/gcc/cp/cp-tree.h
+===================================================================
+--- a/src/gcc/cp/cp-tree.h
++++ b/src/gcc/cp/cp-tree.h
+@@ -6447,7 +6447,6 @@ extern bool is_capture_proxy			(tree);
+ extern bool is_normal_capture_proxy             (tree);
+ extern void register_capture_members		(tree);
+ extern tree lambda_expr_this_capture            (tree, bool);
+-extern void maybe_generic_this_capture		(tree, tree);
+ extern tree maybe_resolve_dummy			(tree, bool);
+ extern tree current_nonlambda_function		(void);
+ extern tree nonlambda_method_basetype		(void);
