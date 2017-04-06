@@ -112,6 +112,7 @@ debian_patches += \
 	mips-madd4 \
 	gcc-fuse-ld-lld \
 	revert-r246134 \
+	pr78543 \
 
 ifeq ($(libstdcxx_abi),new)
   debian_patches += libstdc++-functexcept

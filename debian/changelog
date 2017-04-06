@@ -1,9 +1,15 @@
-gcc-6 (6.3.0-10+rpi1) stretch-staging; urgency=medium
+gcc-6 (6.3.0-11+rpi1) stretch-staging; urgency=medium
 
   [changes brought forward from 6.1.1-1+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 11 May 2016 20:56:09 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Sat, 25 Mar 2017 16:58:27 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Thu, 06 Apr 2017 19:39:02 +0000
+
+gcc-6 (6.3.0-11) unstable; urgency=medium
+
+  * Fix PR target/78543 (PPC), taken from the gcc-6-branch. Closes: #856809.
+
+ -- Matthias Klose <doko@debian.org>  Wed, 29 Mar 2017 00:17:25 +0200
 
 gcc-6 (6.3.0-10) unstable; urgency=medium
 
