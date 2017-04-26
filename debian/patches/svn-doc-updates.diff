@@ -1,0 +1,369 @@
+# DP: updates from the 6 branch upto 20170406 (documentation).
+
+svn diff svn://gcc.gnu.org/svn/gcc/tags/gcc_6_3_0_release svn://gcc.gnu.org/svn/gcc/branches/gcc-6-branch \
+	| sed -r 's,^--- (\S+)\t(\S+)(.*)$,--- a/src/\1\t\2,;s,^\+\+\+ (\S+)\t(\S+)(.*)$,+++ b/src/\1\t\2,' \
+	| awk '/^Index:.*\.texi/ {skip=0; print; next} /^Index:/ {skip=1; next} skip==0'
+
+Index: gcc/doc/generic.texi
+===================================================================
+--- a/src/gcc/doc/generic.texi	(.../tags/gcc_6_3_0_release)
++++ b/src/gcc/doc/generic.texi	(.../branches/gcc-6-branch)
+@@ -3241,7 +3241,7 @@
+ @end smallexample
+ 
+ Detailed description for usage and functionality of @code{_Cilk_spawn} can be 
+-found at http://www.cilkplus.org
++found at @uref{https://www.cilkplus.org}.
+ 
+ @item CILK_SYNC_STMT
+ 
+Index: gcc/doc/extend.texi
+===================================================================
+--- a/src/gcc/doc/extend.texi	(.../tags/gcc_6_3_0_release)
++++ b/src/gcc/doc/extend.texi	(.../branches/gcc-6-branch)
+@@ -10157,7 +10157,7 @@
+ 
+ Further details and examples about these built-in functions are described 
+ in the Cilk Plus language manual which can be found at 
+-@uref{http://www.cilkplus.org}.
++@uref{https://www.cilkplus.org}.
+ 
+ @node Other Builtins
+ @section Other Built-in Functions Provided by GCC
+@@ -13973,14 +13973,14 @@
+ of processors when hardware decimal floating point
+ (@option{-mhard-dfp}) is available:
+ @smallexample
+-_Decimal64 __builtin_dxex (_Decimal64);
+-_Decimal128 __builtin_dxexq (_Decimal128);
++long long __builtin_dxex (_Decimal64);
++long long __builtin_dxexq (_Decimal128);
+ _Decimal64 __builtin_ddedpd (int, _Decimal64);
+ _Decimal128 __builtin_ddedpdq (int, _Decimal128);
+ _Decimal64 __builtin_denbcd (int, _Decimal64);
+ _Decimal128 __builtin_denbcdq (int, _Decimal128);
+-_Decimal64 __builtin_diex (_Decimal64, _Decimal64);
+-_Decimal128 _builtin_diexq (_Decimal128, _Decimal128);
++_Decimal64 __builtin_diex (long long, _Decimal64);
++_Decimal128 _builtin_diexq (long long, _Decimal128);
+ _Decimal64 __builtin_dscli (_Decimal64, int);
+ _Decimal128 __builtin_dscliq (_Decimal128, int);
+ _Decimal64 __builtin_dscri (_Decimal64, int);
+@@ -16554,8 +16554,8 @@
+ int __builtin_bcdsub_ov (vector __int128_t, vector__int128_t);
+ @end smallexample
+ 
+-If the ISA 3.00 additions to the vector/scalar (power9-vector)
+-instruction set are available:
++If the ISA 3.0 instruction set additions (@option{-mcpu=power9})
++are available:
+ 
+ @smallexample
+ vector long long vec_vctz (vector long long);
+@@ -16591,10 +16591,9 @@
+ vector unsigned long long vec_vprtybd (vector unsigned long long);
+ @end smallexample
+ 
+-
+-If the ISA 3.00 additions to the vector/scalar (power9-vector)
+-instruction set are available for 64-bit targets:
+-
++On 64-bit targets, if the ISA 3.0 additions (@option{-mcpu=power9})
++are available:
++ 
+ @smallexample
+ vector long vec_vprtyb (vector long);
+ vector unsigned long vec_vprtyb (vector unsigned long);
+@@ -16609,9 +16608,7 @@
+ @end smallexample
+ 
+ The following built-in vector functions are available for the PowerPC family
+-of processors, starting with ISA 3.0 or later (@option{-mcpu=power9})
+-or with @option{-mpower9-vector}:
+-
++of processors, starting with ISA 3.0 or later (@option{-mcpu=power9}):
+ @smallexample
+ __vector unsigned char
+ vec_absd (__vector unsigned char arg1, __vector unsigned char arg2);
+@@ -16723,9 +16720,9 @@
+ integer that is 0 or 1.  The third argument to these builtin functions
+ must be a constant integer in the range of 0 to 15.
+ 
+-If the ISA 3.00 additions to the vector/scalar (power9-vector)
+-instruction set are available, the following additional functions are
+-available for both 32-bit and 64-bit targets.
++If the ISA 3.0 instruction set additions 
++are enabled (@option{-mcpu=power9}), the following additional
++functions are available for both 32-bit and 64-bit targets.
+ 
+ vector short vec_xl (int, vector short *);
+ vector short vec_xl (int, short *);
+Index: gcc/doc/gcc.texi
+===================================================================
+--- a/src/gcc/doc/gcc.texi	(.../tags/gcc_6_3_0_release)
++++ b/src/gcc/doc/gcc.texi	(.../branches/gcc-6-branch)
+@@ -67,6 +67,7 @@
+ * g++: (gcc).                  The GNU C++ compiler.
+ * gcov: (gcc) Gcov.            @command{gcov}---a test coverage program.
+ * gcov-tool: (gcc) Gcov-tool.  @command{gcov-tool}---an offline gcda profile processing program.
++* gcov-dump: (gcc) Gcov-dump.  @command{gcov-dump}---an offline gcda and gcno profile dump tool.
+ @end direntry
+ This file documents the use of the GNU compilers.
+ @sp 1
+@@ -140,6 +141,7 @@
+ * Compatibility::   Binary Compatibility
+ * Gcov::            @command{gcov}---a test coverage program.
+ * Gcov-tool::       @command{gcov-tool}---an offline gcda profile processing program.
++* Gcov-dump::       @command{gcov-dump}---an offline gcda and gcno profile dump tool.
+ * Trouble::         If you have trouble using GCC.
+ * Bugs::            How, why and where to report bugs.
+ * Service::         How To Get Help with GCC
+@@ -167,6 +169,7 @@
+ @include compat.texi
+ @include gcov.texi
+ @include gcov-tool.texi
++@include gcov-dump.texi
+ @include trouble.texi
+ @include bugreport.texi
+ @include service.texi
+Index: gcc/doc/passes.texi
+===================================================================
+--- a/src/gcc/doc/passes.texi	(.../tags/gcc_6_3_0_release)
++++ b/src/gcc/doc/passes.texi	(.../branches/gcc-6-branch)
+@@ -163,7 +163,7 @@
+ @end itemize
+ 
+ Documentation about Cilk Plus and language specification is provided under the
+-"Learn" section in @w{@uref{http://www.cilkplus.org/}}.  It is worth mentioning
++"Learn" section in @w{@uref{https://www.cilkplus.org}}.  It is worth mentioning
+ that the current implementation follows ABI 1.1.
+ 
+ @node Gimplification pass
+Index: gcc/doc/invoke.texi
+===================================================================
+--- a/src/gcc/doc/invoke.texi	(.../tags/gcc_6_3_0_release)
++++ b/src/gcc/doc/invoke.texi	(.../branches/gcc-6-branch)
+@@ -256,7 +256,7 @@
+ -Wno-attributes -Wbool-compare -Wno-builtin-macro-redefined @gol
+ -Wc90-c99-compat -Wc99-c11-compat @gol
+ -Wc++-compat -Wc++11-compat -Wc++14-compat -Wcast-align  -Wcast-qual  @gol
+--Wchar-subscripts -Wclobbered  -Wcomment -Wconditionally-supported  @gol
++-Wchar-subscripts -Wchkp -Wclobbered  -Wcomment -Wconditionally-supported  @gol
+ -Wconversion -Wcoverage-mismatch -Wno-cpp -Wdate-time -Wdelete-incomplete @gol
+ -Wno-deprecated -Wno-deprecated-declarations -Wno-designated-init @gol
+ -Wdisabled-optimization @gol
+@@ -1001,10 +1001,9 @@
+ -mquad-memory-atomic -mno-quad-memory-atomic @gol
+ -mcompat-align-parm -mno-compat-align-parm @gol
+ -mupper-regs-df -mno-upper-regs-df -mupper-regs-sf -mno-upper-regs-sf @gol
+--mupper-regs -mno-upper-regs -mmodulo -mno-modulo @gol
++-mupper-regs -mno-upper-regs @gol
+ -mfloat128 -mno-float128 -mfloat128-hardware -mno-float128-hardware @gol
+--mpower9-fusion -mno-mpower9-fusion -mpower9-vector -mno-power9-vector @gol
+--mpower9-dform -mno-power9-dform -mlra -mno-lra}
++-mlra -mno-lra}
+ 
+ @emph{RX Options}
+ @gccoptlist{-m64bit-doubles  -m32bit-doubles  -fpu  -nofpu@gol
+@@ -3651,6 +3650,11 @@
+ comment, or whenever a Backslash-Newline appears in a @samp{//} comment.
+ This warning is enabled by @option{-Wall}.
+ 
++@item -Wchkp
++@opindex Wchkp
++Warn about an invalid memory access that is found by Pointer Bounds Checker
++(@option{-fcheck-pointer-bounds}).
++
+ @item -Wno-coverage-mismatch
+ @opindex Wno-coverage-mismatch
+ Warn if feedback profiles do not match when using the
+@@ -19880,8 +19884,7 @@
+ -mpowerpc-gpopt  -mpowerpc-gfxopt  -msingle-float -mdouble-float @gol
+ -msimple-fpu -mstring  -mmulhw  -mdlmzb  -mmfpgpr -mvsx @gol
+ -mcrypto -mdirect-move -mhtm -mpower8-fusion -mpower8-vector @gol
+--mquad-memory -mquad-memory-atomic -mmodulo -mfloat128 -mfloat128-hardware @gol
+--mpower9-fusion -mpower9-vector -mpower9-dform}
++-mquad-memory -mquad-memory-atomic -mfloat128 -mfloat128-hardware}
+ 
+ The particular options set for any particular CPU varies between
+ compiler versions, depending on what setting seems to produce optimal
+@@ -20113,8 +20116,8 @@
+ instructions that target all 64 registers in the vector/scalar
+ floating point register set that were added in version 2.07 of the
+ PowerPC ISA.  @option{-mupper-regs-sf} is turned on by default if you
+-use either of the @option{-mcpu=power8} or @option{-mpower8-vector}
+-options.
++use either of the @option{-mcpu=power8}, @option{-mpower8-vector}, or
++@option{-mcpu=power9} options.
+ 
+ @item -mupper-regs
+ @itemx -mno-upper-regs
+@@ -20159,40 +20162,6 @@
+ not use either @option{-mfloat128} or @option{-mfloat128-hardware},
+ the IEEE 128-bit floating point support will not be enabled.
+ 
+-@item -mmodulo
+-@itemx -mno-modulo
+-@opindex mmodulo
+-@opindex mno-module
+-Generate code that uses (does not use) the ISA 3.0 integer modulo
+-instructions.  The @option{-mmodulo} option is enabled by default
+-with the @option{-mcpu=power9} option.
+-
+-@item -mpower9-fusion
+-@itemx -mno-power9-fusion
+-@opindex mpower9-fusion
+-@opindex mno-power9-fusion
+-Generate code that keeps (does not keeps) some operations adjacent so
+-that the instructions can be fused together on power9 and later
+-processors.
+-
+-@item -mpower9-vector
+-@itemx -mno-power9-vector
+-@opindex mpower9-vector
+-@opindex mno-power9-vector
+-Generate code that uses (does not use) the vector and scalar
+-instructions that were added in version 3.0 of the PowerPC ISA.  Also
+-enable the use of built-in functions that allow more direct access to
+-the vector instructions.
+-
+-@item -mpower9-dform
+-@itemx -mno-power9-dform
+-@opindex mpower9-dform
+-@opindex mno-power9-dform
+-Enable (disable) scalar d-form (register + offset) memory instructions
+-to load/store traditional Altivec registers. If the @var{LRA} register
+-allocator is enabled, also enable (disable) vector d-form memory
+-instructions.
+-
+ @item -mfloat-gprs=@var{yes/single/double/no}
+ @itemx -mfloat-gprs
+ @opindex mfloat-gprs
+Index: gcc/doc/md.texi
+===================================================================
+--- a/src/gcc/doc/md.texi	(.../tags/gcc_6_3_0_release)
++++ b/src/gcc/doc/md.texi	(.../branches/gcc-6-branch)
+@@ -3139,13 +3139,13 @@
+ is incorrect.
+ 
+ @item wb
+-Altivec register if @option{-mpower9-dform} is used or NO_REGS.
++Altivec register if @option{-mcpu=power9} is used or NO_REGS.
+ 
+ @item wd
+ VSX vector register to hold vector double data or NO_REGS.
+ 
+ @item we
+-VSX register if the @option{-mpower9-vector} and @option{-m64} options
++VSX register if the @option{-mcpu=power9} and @option{-m64} options
+ were used or NO_REGS.
+ 
+ @item wf
+@@ -3211,6 +3211,9 @@
+ @item wz
+ Floating point register if the LFIWZX instruction is enabled or NO_REGS.
+ 
++@item wA
++Address base register if 64-bit instructions are enabled or NO_REGS.
++
+ @item wD
+ Int constant that is the element number of the 64-bit scalar in a vector.
+ 
+Index: gcc/doc/gcov-dump.texi
+===================================================================
+--- a/src/gcc/doc/gcov-dump.texi	(.../tags/gcc_6_3_0_release)
++++ b/src/gcc/doc/gcov-dump.texi	(.../branches/gcc-6-branch)
+@@ -0,0 +1,93 @@
++@c Copyright (C) 2017 Free Software Foundation, Inc.
++@c This is part of the GCC manual.
++@c For copying conditions, see the file gcc.texi.
++
++@ignore
++@c man begin COPYRIGHT
++Copyright @copyright{} 2017 Free Software Foundation, Inc.
++
++Permission is granted to copy, distribute and/or modify this document
++under the terms of the GNU Free Documentation License, Version 1.3 or
++any later version published by the Free Software Foundation; with the
++Invariant Sections being ``GNU General Public License'' and ``Funding
++Free Software'', the Front-Cover texts being (a) (see below), and with
++the Back-Cover Texts being (b) (see below).  A copy of the license is
++included in the gfdl(7) man page.
++
++(a) The FSF's Front-Cover Text is:
++
++     A GNU Manual
++
++(b) The FSF's Back-Cover Text is:
++
++     You have freedom to copy and modify this GNU Manual, like GNU
++     software.  Copies published by the Free Software Foundation raise
++     funds for GNU development.
++@c man end
++@c Set file name and title for the man page.
++@setfilename gcov-dump
++@settitle offline gcda and gcno profile dump tool
++@end ignore
++
++@node Gcov-dump
++@chapter @command{gcov-dump}---an Offline Gcda and Gcno Profile Dump Tool
++
++@menu
++* Gcov-dump Intro::             Introduction to gcov-dump.
++* Invoking Gcov-dump::          How to use gcov-dump.
++@end menu
++
++@node Gcov-dump Intro
++@section Introduction to @command{gcov-dump}
++@c man begin DESCRIPTION
++
++@command{gcov-dump} is a tool you can use in conjunction with GCC to
++dump content of gcda and gcno profile files offline.
++
++@c man end
++
++@node Invoking Gcov-dump
++@section Invoking @command{gcov-dump}
++
++@smallexample
++Usage: gcov-dump @r{[}@var{OPTION}@r{]} ... @var{gcovfiles}
++@end smallexample
++
++@command{gcov-dump} accepts the following options:
++
++@ignore
++@c man begin SYNOPSIS
++gcov-dump [@option{-v}|@option{--version}]
++     [@option{-h}|@option{--help}]
++     [@option{-l}|@option{--long}]
++     [@option{-p}|@option{--positions}]
++     [@option{-w}|@option{--working-sets}] @var{gcovfiles}
++@c man end
++@end ignore
++
++@c man begin OPTIONS
++@table @gcctabopt
++@item -h
++@itemx --help
++Display help about using @command{gcov-dump} (on the standard output), and
++exit without doing any further processing.
++
++@item -v
++@itemx --version
++Display the @command{gcov-dump} version number (on the standard output),
++and exit without doing any further processing.
++
++@item -l
++@itemx --long
++Dump content of records.
++
++@item -p
++@itemx --positions
++Dump positions of records.
++
++@item -w
++@itemx --working-sets
++Dump working set computed from summary.
++@end table
++
++@c man end
