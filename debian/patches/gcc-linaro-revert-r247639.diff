@@ -1,0 +1,369 @@
+Index: b/src/gcc/ChangeLog
+===================================================================
+--- a/src/gcc/ChangeLog
++++ b/src/gcc/ChangeLog
+@@ -209,25 +209,6 @@
+ 	* config/i386/i386.c (ix86_print_operand): Use output_operand_lossage
+ 	instead of gcc_assert for K, r and R code checks.  Formatting fixes.
+ 
+-2017-05-05  Marek Polacek  <polacek@redhat.com>
+-	    Ramana Radhakrishnan  <ramana.radhakrishnan@arm.com>
+-	    Jakub Jelinek  <jakub@redhat.com>
+-
+-	PR target/77728
+-	* config/arm/arm.c: Include gimple.h.
+-	(aapcs_layout_arg): Emit -Wpsabi note if arm_needs_doubleword_align
+-	returns negative, increment ncrn if it returned non-zero.
+-	(arm_needs_doubleword_align): Return int instead of bool,
+-	ignore DECL_ALIGN of non-FIELD_DECL TYPE_FIELDS chain
+-	members, but if there is any such non-FIELD_DECL
+-	> PARM_BOUNDARY aligned decl, return -1 instead of false.
+-	(arm_function_arg): Emit -Wpsabi note if arm_needs_doubleword_align
+-	returns negative, increment nregs if it returned non-zero.
+-	(arm_setup_incoming_varargs): Likewise.
+-	(arm_function_arg_boundary): Emit -Wpsabi note if
+-	arm_needs_doubleword_align returns negative, return
+-	DOUBLEWORD_ALIGNMENT if it returned non-zero.
+-
+ 2017-05-03  Uros Bizjak  <ubizjak@gmail.com>
+ 
+ 	Backport from mainline
+Index: b/src/gcc/testsuite/ChangeLog
+===================================================================
+--- a/src/gcc/testsuite/ChangeLog
++++ b/src/gcc/testsuite/ChangeLog
+@@ -151,13 +151,6 @@
+ 	PR c++/79512
+ 	* c-c++-common/gomp/pr79512.c: New test.
+ 
+-2017-05-05  Marek Polacek  <polacek@redhat.com>
+-	    Ramana Radhakrishnan  <ramana.radhakrishnan@arm.com>
+-	    Jakub Jelinek  <jakub@redhat.com>
+-
+-	PR target/77728
+-	* g++.dg/abi/pr77728-1.C: New test.
+-
+ 2017-05-01  Janus Weil  <janus@gcc.gnu.org>
+ 
+ 	Backport from trunk
+Index: b/src/gcc/testsuite/g++.dg/abi/pr77728-1.C
+===================================================================
+--- a/src/gcc/testsuite/g++.dg/abi/pr77728-1.C
++++ b/src/gcc/testsuite/g++.dg/abi/pr77728-1.C
+@@ -1,171 +0,0 @@
+-// { dg-do compile { target arm_eabi } }
+-// { dg-options "-Wpsabi" }
+-
+-#include <stdarg.h>
+-
+-template <int N>
+-struct A { double p; };
+-
+-A<0> v;
+-
+-template <int N>
+-struct B
+-{
+-  typedef A<N> T;
+-  int i, j;
+-};
+-
+-struct C : public B<0> {};
+-struct D {};
+-struct E : public D, C {};
+-struct F : public B<1> {};
+-struct G : public F { static double y; };
+-struct H : public G {};
+-struct I : public D { long long z; };
+-struct J : public D { static double z; int i, j; };
+-
+-template <int N>
+-struct K : public D { typedef A<N> T; int i, j; };
+-
+-struct L { static double h; int i, j; };
+-
+-int
+-fn1 (int a, B<0> b)	// { dg-message "note: parameter passing for argument of type \[^\n\r]* will change in GCC 7\.1" }
+-{
+-  return a + b.i;
+-}
+-
+-int
+-fn2 (int a, B<1> b)
+-{
+-  return a + b.i;
+-}
+-
+-int
+-fn3 (int a, L b)	// { dg-message "note: parameter passing for argument of type \[^\n\r]* will change in GCC 7\.1" }
+-{
+-  return a + b.i;
+-}
+-
+-int
+-fn4 (int a, int b, int c, int d, int e, int f, int g, int h, int i, int j, int k, int l, int m, B<0> n, ...)
+-// { dg-message "note: parameter passing for argument of type \[^\n\r]* will change in GCC 7\.1" "" { target *-*-* } .-1 }
+-{
+-  va_list ap;
+-  va_start (ap, n);
+-  int x = va_arg (ap, int);
+-  va_end (ap);
+-  return x;
+-}
+-
+-int
+-fn5 (int a, int b, int c, int d, int e, int f, int g, int h, int i, int j, int k, int l, int m, B<1> n, ...)
+-{
+-  va_list ap;
+-  va_start (ap, n);
+-  int x = va_arg (ap, int);
+-  va_end (ap);
+-  return x;
+-}
+-
+-int
+-fn6 (int a, int b, int c, int d, int e, int f, int g, int h, int i, int j, int k, int l, int m, C n, ...)
+-{
+-  va_list ap;
+-  va_start (ap, n);
+-  int x = va_arg (ap, int);
+-  va_end (ap);
+-  return x;
+-}
+-
+-int
+-fn7 (int a, int b, int c, int d, int e, int f, int g, int h, int i, int j, int k, int l, int m, E n, ...)
+-{
+-  va_list ap;
+-  va_start (ap, n);
+-  int x = va_arg (ap, int);
+-  va_end (ap);
+-  return x;
+-}
+-
+-int
+-fn8 (int a, int b, int c, int d, int e, int f, int g, int h, int i, int j, int k, int l, int m, H n, ...)
+-{
+-  va_list ap;
+-  va_start (ap, n);
+-  int x = va_arg (ap, int);
+-  va_end (ap);
+-  return x;
+-}
+-
+-int
+-fn9 (int a, int b, int c, int d, int e, int f, int g, int h, int i, int j, int k, int l, int m, I n, ...)
+-{
+-  va_list ap;
+-  va_start (ap, n);
+-  int x = va_arg (ap, int);
+-  va_end (ap);
+-  return x;
+-}
+-
+-int
+-fn10 (int a, int b, int c, int d, int e, int f, int g, int h, int i, int j, int k, int l, int m, J n, ...)
+-// { dg-message "note: parameter passing for argument of type \[^\n\r]* will change in GCC 7\.1" "" { target *-*-* } .-1 }
+-{
+-  va_list ap;
+-  va_start (ap, n);
+-  int x = va_arg (ap, int);
+-  va_end (ap);
+-  return x;
+-}
+-
+-int
+-fn11 (int a, int b, int c, int d, int e, int f, int g, int h, int i, int j, int k, int l, int m, K<0> n, ...)
+-// { dg-message "note: parameter passing for argument of type \[^\n\r]* will change in GCC 7\.1" "" { target *-*-* } .-1 }
+-{
+-  va_list ap;
+-  va_start (ap, n);
+-  int x = va_arg (ap, int);
+-  va_end (ap);
+-  return x;
+-}
+-
+-int
+-fn12 (int a, int b, int c, int d, int e, int f, int g, int h, int i, int j, int k, int l, int m, K<2> n, ...)
+-{
+-  va_list ap;
+-  va_start (ap, n);
+-  int x = va_arg (ap, int);
+-  va_end (ap);
+-  return x;
+-}
+-
+-void
+-test ()
+-{
+-  static B<0> b0;
+-  static B<1> b1;
+-  static L l;
+-  static C c;
+-  static E e;
+-  static H h;
+-  static I i;
+-  static J j;
+-  static K<0> k0;
+-  static K<2> k2;
+-  fn1 (1, b0);	// { dg-message "note: parameter passing for argument of type \[^\n\r]* will change in GCC 7\.1" }
+-  fn2 (1, b1);
+-  fn3 (1, l);	// { dg-message "note: parameter passing for argument of type \[^\n\r]* will change in GCC 7\.1" }
+-  fn4 (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, b0, 1, 2, 3, 4);
+-  // { dg-message "note: parameter passing for argument of type \[^\n\r]* will change in GCC 7\.1" "" { target *-*-* } .-1 }
+-  fn5 (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, b1, 1, 2, 3, 4);
+-  fn6 (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, c, 1, 2, 3, 4);
+-  fn7 (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, e, 1, 2, 3, 4);
+-  fn8 (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, h, 1, 2, 3, 4);
+-  fn9 (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, i, 1, 2, 3, 4);
+-  fn10 (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, j, 1, 2, 3, 4);
+-  // { dg-message "note: parameter passing for argument of type \[^\n\r]* will change in GCC 7\.1" "" { target *-*-* } .-1 }
+-  fn11 (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, k0, 1, 2, 3, 4);
+-  // { dg-message "note: parameter passing for argument of type \[^\n\r]* will change in GCC 7\.1" "" { target *-*-* } .-1 }
+-  fn12 (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, k2, 1, 2, 3, 4);
+-}
+Index: b/src/gcc/config/arm/arm.c
+===================================================================
+--- a/src/gcc/config/arm/arm.c
++++ b/src/gcc/config/arm/arm.c
+@@ -61,7 +61,6 @@
+ #include "builtins.h"
+ #include "tm-constrs.h"
+ #include "rtl-iter.h"
+-#include "gimple.h"
+ 
+ /* This file should be included last.  */
+ #include "target-def.h"
+@@ -79,7 +78,7 @@ struct four_ints
+ 
+ /* Forward function declarations.  */
+ static bool arm_const_not_ok_for_debug_p (rtx);
+-static int arm_needs_doubleword_align (machine_mode, const_tree);
++static bool arm_needs_doubleword_align (machine_mode, const_tree);
+ static int arm_compute_static_chain_stack_bytes (void);
+ static arm_stack_offsets *arm_get_frame_offsets (void);
+ static void arm_add_gc_roots (void);
+@@ -6138,20 +6137,8 @@ aapcs_layout_arg (CUMULATIVE_ARGS *pcum,
+   /* C3 - For double-word aligned arguments, round the NCRN up to the
+      next even number.  */
+   ncrn = pcum->aapcs_ncrn;
+-  if (ncrn & 1)
+-    {
+-      int res = arm_needs_doubleword_align (mode, type);
+-      /* Only warn during RTL expansion of call stmts, otherwise we would
+-	 warn e.g. during gimplification even on functions that will be
+-	 always inlined, and we'd warn multiple times.  Don't warn when
+-	 called in expand_function_start either, as we warn instead in
+-	 arm_function_arg_boundary in that case.  */
+-      if (res < 0 && warn_psabi && currently_expanding_gimple_stmt)
+-	inform (input_location, "parameter passing for argument of type "
+-		"%qT will change in GCC 7.1", type);
+-      if (res != 0)
+-	ncrn++;
+-    }
++  if ((ncrn & 1) && arm_needs_doubleword_align (mode, type))
++    ncrn++;
+ 
+   nregs = ARM_NUM_REGS2(mode, type);
+ 
+@@ -6256,16 +6243,12 @@ arm_init_cumulative_args (CUMULATIVE_ARG
+     }
+ }
+ 
+-/* Return 1 if double word alignment is required for argument passing.
+-   Return -1 if double word alignment used to be required for argument
+-   passing before PR77728 ABI fix, but is not required anymore.
+-   Return 0 if double word alignment is not required and wasn't requried
+-   before either.  */
+-static int
++/* Return true if mode/type need doubleword alignment.  */
++static bool
+ arm_needs_doubleword_align (machine_mode mode, const_tree type)
+ {
+   if (!type)
+-    return GET_MODE_ALIGNMENT (mode) > PARM_BOUNDARY;
++    return PARM_BOUNDARY < GET_MODE_ALIGNMENT (mode);
+ 
+   /* Scalar and vector types: Use natural alignment, i.e. of base type.  */
+   if (!AGGREGATE_TYPE_P (type))
+@@ -6275,21 +6258,12 @@ arm_needs_doubleword_align (machine_mode
+   if (TREE_CODE (type) == ARRAY_TYPE)
+     return TYPE_ALIGN (TREE_TYPE (type)) > PARM_BOUNDARY;
+ 
+-  int ret = 0;
+   /* Record/aggregate types: Use greatest member alignment of any member.  */ 
+   for (tree field = TYPE_FIELDS (type); field; field = DECL_CHAIN (field))
+     if (DECL_ALIGN (field) > PARM_BOUNDARY)
+-      {
+-	if (TREE_CODE (field) == FIELD_DECL)
+-	  return 1;
+-	else
+-	  /* Before PR77728 fix, we were incorrectly considering also
+-	     other aggregate fields, like VAR_DECLs, TYPE_DECLs etc.
+-	     Make sure we can warn about that with -Wpsabi.  */
+-	  ret = -1;
+-      }
++      return true;
+ 
+-  return ret;
++  return false;
+ }
+ 
+ 
+@@ -6346,15 +6320,10 @@ arm_function_arg (cumulative_args_t pcum
+     }
+ 
+   /* Put doubleword aligned quantities in even register pairs.  */
+-  if ((pcum->nregs & 1) && ARM_DOUBLEWORD_ALIGN)
+-    {
+-      int res = arm_needs_doubleword_align (mode, type);
+-      if (res < 0 && warn_psabi)
+-	inform (input_location, "parameter passing for argument of type "
+-		"%qT will change in GCC 7.1", type);
+-      if (res != 0)
+-	pcum->nregs++;
+-    }
++  if (pcum->nregs & 1
++      && ARM_DOUBLEWORD_ALIGN
++      && arm_needs_doubleword_align (mode, type))
++    pcum->nregs++;
+ 
+   /* Only allow splitting an arg between regs and memory if all preceding
+      args were allocated to regs.  For args passed by reference we only count
+@@ -6373,15 +6342,9 @@ arm_function_arg (cumulative_args_t pcum
+ static unsigned int
+ arm_function_arg_boundary (machine_mode mode, const_tree type)
+ {
+-  if (!ARM_DOUBLEWORD_ALIGN)
+-    return PARM_BOUNDARY;
+-
+-  int res = arm_needs_doubleword_align (mode, type);
+-  if (res < 0 && warn_psabi)
+-    inform (input_location, "parameter passing for argument of type %qT "
+-	    "will change in GCC 7.1", type);
+-
+-  return res != 0 ? DOUBLEWORD_ALIGNMENT : PARM_BOUNDARY;
++  return (ARM_DOUBLEWORD_ALIGN && arm_needs_doubleword_align (mode, type)
++	  ? DOUBLEWORD_ALIGNMENT
++	  : PARM_BOUNDARY);
+ }
+ 
+ static int
+@@ -26439,15 +26402,8 @@ arm_setup_incoming_varargs (cumulative_a
+   if (pcum->pcs_variant <= ARM_PCS_AAPCS_LOCAL)
+     {
+       nregs = pcum->aapcs_ncrn;
+-      if (nregs & 1)
+-	{
+-	  int res = arm_needs_doubleword_align (mode, type);
+-	  if (res < 0 && warn_psabi)
+-	    inform (input_location, "parameter passing for argument of "
+-		    "type %qT will change in GCC 7.1", type);
+-	  if (res != 0)
+-	    nregs++;
+-	}
++      if ((nregs & 1) && arm_needs_doubleword_align (mode, type))
++	nregs++;
+     }
+   else
+     nregs = pcum->nregs;
