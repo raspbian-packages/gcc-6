@@ -290,6 +290,11 @@ endif
 	done
 
 ifneq (,$(filter $(build_type), build-native cross-build-native))
+	: # see #814977, work around it for now ...
+	ln -sf gcc$(pkg_ver) $(d_gnat)/$(PF)/bin/gcc$(pkg_ver)$(pkg_ver)
+endif
+
+ifneq (,$(filter $(build_type), build-native cross-build-native))
 	: # still ship the unversioned prefixed names in the gnat package.
 	for i in $(GNAT_TOOLS); do \
 	  ln -sf $(cmd_prefix)$$i$(pkg_ver) \

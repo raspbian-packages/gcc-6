@@ -2398,9 +2398,11 @@ ifneq ($(with_common_libs),yes)
 # apparently this changed with newer dpkg versions (1.18.7?) ...
 	echo 'libgcc_s $(GCC_SONAME) $(p_lgcc)' > debian/shlibs.common
 	echo 'libstdc++ $(CXX_SONAME) $(p_lib)' >> debian/shlibs.common
+	echo 'libquadmath $(QUADMATH_SONAME) libquadmath$(QUADMATH_SONAME)' >> debian/shlibs.common
 	$(foreach ml,32 64 n32 x32 hf sf, \
 	  echo 'libgcc_s $(GCC_SONAME) $(subst lib,lib$(ml),$(p_lgcc))' > debian/shlibs.common$(ml); \
 	  echo 'libstdc++ $(CXX_SONAME) $(subst lib,lib$(ml),$(p_lib))' >> debian/shlibs.common$(ml); \
+	  echo 'libquadmath $(QUADMATH_SONAME) lib$(ml)quadmath$(QUADMATH_SONAME)' >> debian/shlibs.common$(ml); \
 	)
 endif
 

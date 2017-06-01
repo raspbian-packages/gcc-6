@@ -105,7 +105,8 @@ define __do_fortran
 		$(call shlibdirs_to_search, \
 			$(subst gfortran$(FORTRAN_SONAME),gcc$(GCC_SONAME),$(p_l)) \
 			$(subst gfortran$(FORTRAN_SONAME),gcc$(QUADMATH_SONAME),$(p_l)) \
-		,$(2))
+		,$(2)) \
+		$(if $(filter yes, $(with_common_libs)),,-- -Ldebian/shlibs.common$(2))
 	$(call cross_mangle_substvars,$(p_l))
 	echo $(p_l) $(p_d) >> debian/$(lib_binaries)
 

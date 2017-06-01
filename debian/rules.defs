@@ -962,9 +962,7 @@ with_go := $(call envfilt, go, , , $(with_go))
 # Build all packages needed for Go development
 ifneq (,$(findstring gcc, $(PKGSOURCE)))
   ifeq ($(with_go),yes)
-    ifeq ($(with_common_libs),yes)
-      with_libgo := yes
-    endif
+    with_libgo := yes
     enabled_languages += go
   endif
 endif
@@ -1287,8 +1285,10 @@ ifneq (,$(filter $(DEB_TARGET_ARCH),$(mpx_archs)))
   # requires newer binutils, or else libmpxwrappers isn't built
   ifeq (,$(filter $(distrelease),squeeze lucid precise))
     with_mpx := yes
-    ifneq (,$(findstring gcc-, $(PKGSOURCE)))
-      with_libmpx := yes
+    ifeq ($(with_common_libs),yes)
+      ifneq (,$(findstring gcc-, $(PKGSOURCE)))
+        with_libmpx := yes
+      endif
     endif
   endif
 endif
@@ -1414,6 +1414,11 @@ else
   # libvtv -----------------
   ifeq ($(with_vtv)-$(with_common_libs),yes-yes)
       with_libvtv := yes
+  endif
+
+  # libmpx -----------------
+  ifeq ($(with_mpx)-$(with_common_libs),yes-yes)
+      with_libmpx := yes
   endif
 
   # libcilkrts -----------------

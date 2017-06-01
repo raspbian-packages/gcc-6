@@ -1,9 +1,63 @@
-gcc-6 (6.3.0-14+rpi1) stretch-staging; urgency=medium
+gcc-6 (6.3.0-18+rpi1) stretch-staging; urgency=medium
 
   [changes brought forward from 6.1.1-1+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 11 May 2016 20:56:09 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Wed, 26 Apr 2017 14:32:36 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Thu, 01 Jun 2017 13:33:01 +0000
+
+gcc-6 (6.3.0-18) unstable; urgency=medium
+
+  * Update to SVN 20170516 (r248076) from the gcc-6-branch.
+    - Revert fix for PR middle-end/80222.
+    - Fix PR target/80090 (PA), PR target/79027 (PA), PR go/64238,
+      PR fortran/80752.
+  * Install crtfastmath.o and re-add unwind support on kfreebsd-amd64 (James
+    Clarke). Closes: #833829.
+  * Work around #814977 (gnat calling gcc-6-6) by providing a gcc-6-6
+    symlink.
+
+ -- Matthias Klose <doko@debian.org>  Tue, 16 May 2017 08:59:32 -0700
+
+gcc-6 (6.3.0-17) unstable; urgency=medium
+
+  * Update to SVN 20170510 (r247831) from the gcc-6-branch.
+    - Fix PR target/77728 (ARM), PR target/68491 (x86), PR fortran/80392,
+      PR libgomp/80394, PR c/79940, PR c++/79572, PR c++/79641, PR c/80097,
+      PR c++/79512, PR rtl-optimization/80501, PR sanitizer/80349,
+      PR rtl-optimization/80385, PR libgomp/80394, PR c++/80297, PR debug/80321,
+      PR target/80286 (x86), PR debug/79255, PR debug/80025, PR sanitizer/80168,
+      PR rtl-optimization/80112, PR c++/80129, PR sanitizer/79944,
+      PR target/79932 (x86), PR target/79932 (x86), PR c/79940,
+      PR rtl-optimization/79901, PR target/79807 (x86), PR c++/79681,
+      PR target/79729 (x86), PR middle-end/79396, PR target/79570,
+      PR target/79494 (x86), PR target/79568 (x86), PR target/79559 (x86),
+      PR c++/80363, PR c++/80176, PR c++/79572, PR c++/80141, PR c++/79896,
+      PR c++/79664, PR c++/79639, PR c++/79512, PR middle-end/80075,
+      PR plugin/80094, PR tree-optimization/80113, PR tree-optimization/80122,
+      PR tree-optimization/80167, PR tree-optimization/80170,
+      PR middle-end/80171, PR middle-end/80222, PR tree-optimization/80262,
+      PR tree-optimization/80275, PR tree-optimization/80334,
+      PR middle-end/80362, PR tree-optimization/80492, PR middle-end/80539,
+      PR middle-end/71310, PR bootstrap/71510.
+  * Fix dependency on gcc-base package for rtlibs stage build (Helmut Grohne).
+  * Remove libquadmath/gdtoa license from debian/copyright (files removed).
+  * Build libgo when not building common libs.
+  * Fix PR rtl-optimization/60818, taken from the trunk (Adrian Glaubitz).
+    Closes: #861945.
+  * Fix building libgfortran, libgphobos and libmpx when building without
+    common libs.
+
+ -- Matthias Klose <doko@debian.org>  Wed, 10 May 2017 13:13:01 +0200
+
+gcc-6 (6.3.0-16) unstable; urgency=medium
+
+  * Update to SVN 20170425 (r247223) from the gcc-6-branch.
+    - Fix PR tree-optimization/80426, PR target/80462 (AVR),
+      PR target/79453 (AVR), PR fortran/80361.
+  * libstdc++6: add Breaks: libsigc++-2.0-0c2a (<= 2.4.1-1+b1). Closes: #861060.
+  * Fix PR middle-end/80533 (wrong code), taken from the trunk. LP: #1685385.
+
+ -- Matthias Klose <doko@debian.org>  Sun, 30 Apr 2017 15:47:47 +0700
 
 gcc-6 (6.3.0-14) unstable; urgency=medium
 
@@ -142,7 +196,7 @@ gcc-6 (6.3.0-6) unstable; urgency=medium
   * Disable lxc1/sxc1 instruction on mips and mipsel.
 
   [ Matthias Klose ]
-  * Configure with --enable-default-pie on sparc and sparc64 (James Clark).
+  * Configure with --enable-default-pie on sparc and sparc64 (James Clarke).
     Closes: #854090.
   * Configure with --enable-default-pie on kfreebsd-* (Steven Chamberlain).
   * Configure staged builds with --disable-libmpx (Helmut Grohne).
@@ -188,7 +242,7 @@ gcc-6 (6.3.0-3) unstable; urgency=medium
       PR libstdc++/78389, PR debug/78839, PR rtl-optimization/78617,
       PR target/78253 (ARM), PR target/79044 (PPC), PR c++/78341, PR c++/78949,
       PR c++/78693, PR c++/71182, PR fortran/78866, PR middle-end/50199.
-  * Always configure sparc builds --with-cpu-32=ultrasparc (James Clark).
+  * Always configure sparc builds --with-cpu-32=ultrasparc (James Clarke).
     Closes: #850250.
   * Enable gccgo on m68k (John Paul Adrian Glaubitz). Closes: #850749.
   * Reapply the fix for PR target/55947, and fix PR c++/72813, taken from
@@ -390,7 +444,7 @@ gcc-6 (6.2.0-10) unstable; urgency=medium
       PR fortran/78021, PR fortran/72832, PR fortran/78092, PR fortran/78108,
       PR target/78057 (x86), PR target/78037 (x86).
   * Include go-relocation-test-gcc620-sparc64.obj.uue to fix libgo's
-    debug/elf TestDWARFRelocations test case (James Clark).
+    debug/elf TestDWARFRelocations test case (James Clarke).
   * Reapply fix for PR c++/71912, apply proposed fix for PR c++/78039.
     Closes: #841292.
   * Don't install alternatives for go and gofmt. The preferred way to do that
@@ -411,7 +465,7 @@ gcc-6 (6.2.0-8) unstable; urgency=medium
   * Update to SVN 20161019 (r241346, 6.2.1) from the gcc-6-branch.
     - Fix PR libstdc++/77990, PR target/77991 (x86).
   * Install arm_fp16.h header on arm* architectures for Linaro builds.
-  * Backport upstream revisions from trunk (James Clark). Closes: #840574.
+  * Backport upstream revisions from trunk (James Clarke). Closes: #840574.
     - r240457 (add getrandom for MIPS/SPARC)
     - r241051 (fix getrandom on sparc64 and clone on sparc*)
     - r241072 (make rawClone no_split_stack)

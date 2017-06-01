@@ -15,6 +15,7 @@ series_file	?= $(patchdir)/series
 debian_patches = \
 	svn-updates \
 	libiberty-updates \
+	$(if $(with_linaro_branch),gcc-linaro-revert-r247639) \
 	$(if $(with_linaro_branch),gcc-linaro-revert-r246734) \
 	$(if $(with_linaro_branch),gcc-linaro) \
 	$(if $(with_linaro_branch),gcc-linaro-no-macros) \
@@ -116,6 +117,8 @@ debian_patches += \
 	pr72813 \
 	pr70909 \
 	pr77857 \
+	pr80533 \
+	pr60818 \
 
 ifeq ($(libstdcxx_abi),new)
   debian_patches += libstdc++-functexcept
