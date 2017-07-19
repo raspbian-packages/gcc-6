@@ -951,7 +951,7 @@ Index: b/src/gcc/ada/gcc-interface/Makefile.in
  
  # Link flags used to build gnat tools.  By default we prefer to statically
  # link with libgcc to avoid a dependency on shared libgcc (which is tricky
-@@ -2592,6 +2592,27 @@ install-gnatlib: ../stamp-gnatlib-$(RTSD
+@@ -2633,6 +2633,27 @@ install-gnatlib: ../stamp-gnatlib-$(RTSD
  	cd $(DESTDIR)$(ADA_INCLUDE_DIR); $(CHMOD) a-wx *.adb
  	cd $(DESTDIR)$(ADA_INCLUDE_DIR); $(CHMOD) a-wx *.ads
  
@@ -979,7 +979,7 @@ Index: b/src/gcc/ada/gcc-interface/Makefile.in
  ../stamp-gnatlib1-$(RTSDIR): Makefile
  	$(RMDIR) $(RTSDIR)
  	$(MKDIR) $(RTSDIR)
-@@ -2848,7 +2869,7 @@ gnatlib-shared:
+@@ -2889,7 +2910,7 @@ gnatlib-shared:
  # in getting multiple blank lines, hence a style check error, as a
  # result.
  gnatlib-sjlj:
@@ -988,7 +988,7 @@ Index: b/src/gcc/ada/gcc-interface/Makefile.in
  	THREAD_KIND="$(THREAD_KIND)" ../stamp-gnatlib1-$(RTSDIR)
  	sed \
  	  -e 's/Frontend_Exceptions.*/Frontend_Exceptions       : constant Boolean := True;/' \
-@@ -2857,6 +2878,7 @@ gnatlib-sjlj:
+@@ -2898,6 +2919,7 @@ gnatlib-sjlj:
  	  $(RTSDIR)/system.ads > $(RTSDIR)/s.ads
  	$(MV) $(RTSDIR)/s.ads $(RTSDIR)/system.ads
  	$(MAKE) $(FLAGS_TO_PASS) \
@@ -996,7 +996,7 @@ Index: b/src/gcc/ada/gcc-interface/Makefile.in
  	     EH_MECHANISM="" \
  	     GNATLIBFLAGS="$(GNATLIBFLAGS)" \
  	     GNATLIBCFLAGS="$(GNATLIBCFLAGS)" \
-@@ -2909,6 +2931,8 @@ b_gnatm.o : b_gnatm.adb
+@@ -2950,6 +2972,8 @@ b_gnatm.o : b_gnatm.adb
  
  ADA_INCLUDE_DIR = $(libsubdir)/adainclude
  ADA_RTL_OBJ_DIR = $(libsubdir)/adalib

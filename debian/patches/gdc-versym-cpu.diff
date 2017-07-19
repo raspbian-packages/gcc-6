@@ -177,7 +177,7 @@ Index: b/src/gcc/config/mips/mips.h
 ===================================================================
 --- a/src/gcc/config/mips/mips.h
 +++ b/src/gcc/config/mips/mips.h
-@@ -622,6 +622,54 @@ struct mips_cpu_info {
+@@ -626,6 +626,54 @@ struct mips_cpu_info {
      }									\
    while (0)
  
@@ -261,7 +261,7 @@ Index: b/src/gcc/config/rs6000/rs6000.h
 ===================================================================
 --- a/src/gcc/config/rs6000/rs6000.h
 +++ b/src/gcc/config/rs6000/rs6000.h
-@@ -802,6 +802,28 @@ extern unsigned char rs6000_recip_bits[]
+@@ -804,6 +804,28 @@ extern unsigned char rs6000_recip_bits[]
  #define TARGET_CPU_CPP_BUILTINS() \
    rs6000_cpu_cpp_builtins (pfile)
  

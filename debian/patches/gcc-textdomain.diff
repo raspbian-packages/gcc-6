@@ -19,7 +19,7 @@ Index: b/src/gcc/Makefile.in
 ===================================================================
 --- a/src/gcc/Makefile.in
 +++ b/src/gcc/Makefile.in
-@@ -3995,8 +3995,8 @@ install-po:
+@@ -4013,8 +4013,8 @@ install-po:
  	  dir=$(localedir)/$$lang/LC_MESSAGES; \
  	  echo $(mkinstalldirs) $(DESTDIR)$$dir; \
  	  $(mkinstalldirs) $(DESTDIR)$$dir || exit 1; \

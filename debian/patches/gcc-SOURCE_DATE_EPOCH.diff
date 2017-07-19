@@ -36,7 +36,7 @@ Index: b/src/gcc/c-family/c-common.c
 ===================================================================
 --- a/src/gcc/c-family/c-common.c
 +++ b/src/gcc/c-family/c-common.c
-@@ -12743,4 +12743,37 @@ valid_array_size_p (location_t loc, tree
+@@ -12750,4 +12750,37 @@ valid_array_size_p (location_t loc, tree
    return true;
  }
  

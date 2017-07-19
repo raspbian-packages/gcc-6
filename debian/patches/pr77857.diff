@@ -1,8 +1,10 @@
 # DP: Fix PR go/77857, gccgo vendoring. Taken from the trunk.
 
+Index: b/src/libgo/go/cmd/go/build.go
+===================================================================
 --- a/src/libgo/go/cmd/go/build.go
 +++ b/src/libgo/go/cmd/go/build.go
-@@ -2398,14 +2398,6 @@
+@@ -2307,14 +2307,6 @@ func (gcToolchain) gc(b *builder, p *Pac
  		}
  	}
  
@@ -17,7 +19,7 @@
  	args := []interface{}{buildToolExec, tool("compile"), "-o", ofile, "-trimpath", b.work, buildGcflags, gcargs, "-D", p.localPrefix, importArgs}
  	if ofile == archive {
  		args = append(args, "-pack")
-@@ -2706,6 +2698,55 @@
+@@ -2594,6 +2586,55 @@ func (tools gccgoToolchain) gc(b *builde
  	if p.localPrefix != "" {
  		gcargs = append(gcargs, "-fgo-relative-import-path="+p.localPrefix)
  	}

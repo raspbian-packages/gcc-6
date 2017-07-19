@@ -25,9 +25,11 @@ gcc/cp/
 	writing PCH file.
 
  
+Index: b/src/gcc/c/c-decl.c
+===================================================================
 --- a/src/gcc/c/c-decl.c
 +++ b/src/gcc/c/c-decl.c
-@@ -1420,6 +1420,8 @@
+@@ -1418,6 +1418,8 @@ pop_file_scope (void)
    if (pch_file)
      {
        c_common_write_pch ();
@@ -36,9 +38,11 @@ gcc/cp/
        return;
      }
  
+Index: b/src/gcc/gcc.c
+===================================================================
 --- a/src/gcc/gcc.c
 +++ b/src/gcc/gcc.c
-@@ -1328,7 +1328,7 @@
+@@ -1317,7 +1317,7 @@ static const struct compiler default_com
  		%(cpp_options) -o %{save-temps*:%b.i} %{!save-temps*:%g.i} \n\
  		    cc1 -fpreprocessed %{save-temps*:%b.i} %{!save-temps*:%g.i} \
  			%(cc1_options)\
@@ -47,9 +51,11 @@ gcc/cp/
  			    %{!fdump-ada-spec*:%{!o*:--output-pch=%i.gch}\
  					       %W{o*:--output-pch=%*}}%V}}\
  	  %{!save-temps*:%{!traditional-cpp:%{!no-integrated-cpp:\
+Index: b/src/gcc/cp/decl2.c
+===================================================================
 --- a/src/gcc/cp/decl2.c
 +++ b/src/gcc/cp/decl2.c
-@@ -4461,6 +4461,8 @@
+@@ -4558,6 +4558,8 @@ c_parse_final_cleanups (void)
  	  DECL_ASSEMBLER_NAME (node->decl);
        c_common_write_pch ();
        dump_tu ();

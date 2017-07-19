@@ -14,11 +14,11 @@ git-svn-id: svn+ssh://gcc.gnu.org/svn/gcc/trunk@244641 138bc75d-0d04-0410-961f-8
  gcc/config/mips/mips.h | 6 ++++--
  2 files changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/src/gcc/config/mips/mips.h b/src/gcc/config/mips/mips.h
-index 4205589af45..81032c9f94c 100644
+Index: b/src/gcc/config/mips/mips.h
+===================================================================
 --- a/src/gcc/config/mips/mips.h
 +++ b/src/gcc/config/mips/mips.h
-@@ -1066,11 +1066,13 @@ struct mips_cpu_info {
+@@ -1041,11 +1041,13 @@ struct mips_cpu_info {
  
  /* ISA has 4 operand fused madd instructions of the form
     'd = [+-] (a * b [+-] c)'.  */
@@ -34,6 +34,3 @@ index 4205589af45..81032c9f94c 100644
  
  /* ISA has 3 operand r6 fused madd instructions of the form
     'c = c [+-] (a * b)'.  */
--- 
-2.11.0
-

@@ -17,7 +17,7 @@ Index: b/src/gcc/cp/pt.c
 ===================================================================
 --- a/src/gcc/cp/pt.c
 +++ b/src/gcc/cp/pt.c
-@@ -7281,9 +7281,11 @@ convert_template_argument (tree parm,
+@@ -7285,9 +7285,11 @@ convert_template_argument (tree parm,
            /* Reject template arguments that are references to built-in
               functions with no library fallbacks.  */
            const_tree inner = TREE_OPERAND (val, 0);

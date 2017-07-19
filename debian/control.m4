@@ -728,7 +728,7 @@ Depends: cpp`'PV`'TS (= ${gcc:Version}),ifenabled(`gccbase',` BASEDEP,')
   binutils`'TS (>= ${binutils:Version}),
   ${dep:libgccdev}, ${shlibs:Depends}, ${misc:Depends}
 Recommends: ${dep:libcdev}
-Replaces: gccgo-6 (<< ${gcc:Version})
+Replaces: gccgo-6 (<< ${gcc:Version}), cpp`'PV`'TS (<< 6.3.0-21)
 Suggests: ${gcc:multilib}, gcc`'PV-doc (>= ${gcc:SoftVersion}),
  gcc`'PV-locales (>= ${gcc:SoftVersion}),
  libdbgdep(gcc`'GCC_SO-dbg,,>=,${libgcc:Version}),

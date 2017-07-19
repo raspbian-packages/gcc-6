@@ -15,10 +15,9 @@ series_file	?= $(patchdir)/series
 debian_patches = \
 	svn-updates \
 	libiberty-updates \
-	$(if $(with_linaro_branch),gcc-linaro-revert-r247639) \
-	$(if $(with_linaro_branch),gcc-linaro-revert-r246734) \
 	$(if $(with_linaro_branch),gcc-linaro) \
 	$(if $(with_linaro_branch),gcc-linaro-no-macros) \
+	pr79041$(if $(with_linaro_branch),-linaro) \
 
 #	svn-updates \
 
@@ -118,7 +117,6 @@ debian_patches += \
 	pr70909 \
 	pr77857 \
 	pr80533 \
-	pr60818 \
 
 ifeq ($(libstdcxx_abi),new)
   debian_patches += libstdc++-functexcept
@@ -342,11 +340,6 @@ debian_patches += skip-bootstrap-multilib
 debian_patches += libjava-fixed-symlinks
 debian_patches += libffi-ro-eh_frame_sect
 debian_patches += libffi-mips
-
-# sigaction on sparc changed between glibc 2.19 and 2.21
-ifeq (,$(filter 2.1%, $(shell dpkg-query -l libc-bin | awk '/^.i/ {print $$3}')))
-  debian_patches += pr67899
-endif
 
 debian_patches += gcc-multiarch
 ifeq ($(with_multiarch_lib),yes)

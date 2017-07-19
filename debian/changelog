@@ -1,3 +1,66 @@
+gcc-6 (6.4.0-1) unstable; urgency=medium
+
+  * GCC 6.4.0 release.
+
+ -- Matthias Klose <doko@debian.org>  Tue, 04 Jul 2017 16:59:17 +0200
+
+gcc-6 (6.3.0-21) unstable; urgency=medium
+
+  * Fix Replaces attribute for the liblto_plugin move from cpp to gcc.
+  * Update the Linaro support to the 6.3-2017.06 snapshot.
+
+ -- Matthias Klose <doko@debian.org>  Wed, 28 Jun 2017 19:34:28 +0200
+
+gcc-6 (6.3.0-20) unstable; urgency=medium
+
+  * Update to SVN 20170628 (r249732) from the gcc-6-branch (6.4.0 RC).
+    - Fix PR c++/81130, PR libgomp/80822, PR middle-end/80809,
+      PR middle-end/80809, PR middle-end/80853, PR rtl-optimization/73650,
+      PR target/61729 (PPC), PR target/77850 (PPC), PR rtl-optimization/60818,
+      PR target/80382 (PPC), PR rtl-optimization/80429, PR middle-end/80692,
+      PR target/80618 (PPC), PR target/80966 (PPC), PR middle-end/80902,
+      PR tree-optimization/79552, PR tree-optimization/43434, PR target/79155,
+      PR other/80909, PR ipa/80663, PR ipa/79849, PR ipa/79850, PR driver/31468,
+      PR other/80589, PR gcov-profile/53915, PR driver/56469, PR lto/69953,
+      PR lto/78049, PR middle-end/80809, PR middle-end/80809,
+      PR middle-end/80853, PR tree-optimization/80453, PR middle-end/80341,
+      PR middle-end/80281, PR tree-optimization/79256,
+      PR tree-optimization/69264, PR tree-optimization/69823, PR target/80718,
+      PR target/80510, PR target/68163, PR target/71778, PR c++/80241,
+      PR c++/80244, PR sanitizer/80348, PR sanitizer/80348, PR c++/81154,
+      PR c++/80973, PR c++/80984, PR c++/70844, PR fortran/80918.
+  * Fix PR target/79041, aarch64 backend emitting R_AARCH64_ADR_PREL_PG_HI21
+    relocation despite -mpc-relative-literal-loads option being used.
+  * Move the liblto_plugin from the cpp to the gcc package.
+  * libstdc++6: Add more Breaks to smoothen upgrades from jessie to stretch.
+    Closes: #863845, #863745.
+  * Don't provide libobjc_gc symlinks for the libobjc multilib packages.
+    Closes: #866150.
+  * Configure with --enable-default-pie on ppc64 (Adrian Glaubitz) and
+    powerpc (Mathieu Malaterre).  Closes: #856224.
+
+ -- Matthias Klose <doko@debian.org>  Wed, 28 Jun 2017 13:53:40 +0200
+
+gcc-6 (6.3.0-19) unstable; urgency=medium
+
+  * Update to SVN 20170618 (r249347) from the gcc-6-branch.
+    - Fix PR libstdc++/80504, PR libstdc++/80493, PR libstdc++/80448,
+      PR libstdc++/80137, PR libstdc++/67440, PR libstdc++/69699,
+      PR libstdc++/71444, PR libstdc++/78236, PR target/80799 (x86),
+      PR sanitizer/80166, PR libgcc/80037, PR gcov-profile/78783,
+      PR sanitizer/80350, PR middle-end/79931, PR ipa/65972, PR lto/50345,
+      PR gcov-profile/78783, PR gcov-profile/80413, PR ipa/80212,
+      PR sanitizer/70878, PR gcov-profile/80224, PR ipa/80205, PR ipa/80104,
+      PR c++/80179, PR c++/80267, PR c++/60992, PR c++/80294,
+      PR libstdc++/81002, PR c/81006, PR rtl-optimization/80474,
+      PR target/80968, PR c++/81011, PR fortran/70601, PR fortran/65542,
+      PR fortran/80904, PR ada/80921.
+  * Update the Linaro support to the 6.3-2017.05 snapshot.
+  * Fix libmpx dependency generation for cross builds.
+  * Stop building packages now built by gcc-7.
+
+ -- Matthias Klose <doko@debian.org>  Sun, 18 Jun 2017 16:21:31 +0200
+
 gcc-6 (6.3.0-18+rpi1) stretch-staging; urgency=medium
 
   [changes brought forward from 6.1.1-1+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Wed, 11 May 2016 20:56:09 +0000]

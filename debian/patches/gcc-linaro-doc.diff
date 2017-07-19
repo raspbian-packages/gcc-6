@@ -1,4 +1,4 @@
-# DP: Changes for the Linaro 6-2017.03 release (documentation).
+# DP: Changes for the Linaro 6-2017.06 snapshot (documentation).
 
 --- a/src/gcc/doc/cpp.texi
 +++ b/src/gcc/doc/cpp.texi
@@ -87,7 +87,7 @@
  in ARM mode:
 --- a/src/gcc/doc/install.texi
 +++ b/src/gcc/doc/install.texi
-@@ -1101,19 +1101,59 @@ sysv, aix.
+@@ -1106,19 +1106,59 @@ sysv, aix.
  
  @item --with-multilib-list=@var{list}
  @itemx --without-multilib-list
@@ -176,17 +176,18 @@
  -mapcs-reentrant  -mno-apcs-reentrant @gol
  -msched-prolog  -mno-sched-prolog @gol
  -mlittle-endian  -mbig-endian @gol
-@@ -632,7 +633,8 @@ Objective-C and Objective-C++ Dialects}.
+@@ -632,7 +633,9 @@ Objective-C and Objective-C++ Dialects}.
  -mneon-for-64bits @gol
  -mslow-flash-data @gol
  -masm-syntax-unified @gol
 --mrestrict-it}
 +-mrestrict-it @gol
++-mpure-code @gol
 +-mcmse}
  
  @emph{AVR Options}
  @gccoptlist{-mmcu=@var{mcu} -maccumulate-args -mbranch-cost=@var{cost} @gol
-@@ -9477,6 +9479,11 @@ Size of minimal partition for WHOPR (in estimated instructions).
+@@ -9482,6 +9485,11 @@ Size of minimal partition for WHOPR (in estimated instructions).
  This prevents expenses of splitting very small programs into too many
  partitions.
  
@@ -198,7 +199,7 @@
  @item cxx-max-namespaces-for-diagnostic-help
  The maximum number of namespaces to consult for suggestions when C++
  name lookup fails for an identifier.  The default is 1000.
-@@ -12827,9 +12834,9 @@ These options are defined for AArch64 implementations:
+@@ -12832,9 +12840,9 @@ These options are defined for AArch64 implementations:
  @item -mabi=@var{name}
  @opindex mabi
  Generate code for the specified data model.  Permissible values
@@ -211,7 +212,7 @@
  
  The default depends on the specific target configuration.  Note that
  the LP64 and ILP32 ABIs are not link-compatible; you must compile your
-@@ -12854,25 +12861,24 @@ Generate little-endian code.  This is the default when GCC is configured for an
+@@ -12859,25 +12867,24 @@ Generate little-endian code.  This is the default when GCC is configured for an
  @item -mcmodel=tiny
  @opindex mcmodel=tiny
  Generate code for the tiny code model.  The program and its statically defined
@@ -244,7 +245,7 @@
  
  @item -momit-leaf-frame-pointer
  @itemx -mno-omit-leaf-frame-pointer
-@@ -12894,7 +12900,7 @@ of TLS variables.
+@@ -12899,7 +12906,7 @@ of TLS variables.
  @item -mtls-size=@var{size}
  @opindex mtls-size
  Specify bit size of immediate TLS offsets.  Valid values are 12, 24, 32, 48.
@@ -253,7 +254,7 @@
  
  @item -mfix-cortex-a53-835769
  @itemx -mno-fix-cortex-a53-835769
-@@ -12914,12 +12920,34 @@ corresponding flag to the linker.
+@@ -12919,12 +12926,34 @@ corresponding flag to the linker.
  
  @item -mlow-precision-recip-sqrt
  @item -mno-low-precision-recip-sqrt
@@ -294,7 +295,7 @@
  
  @item -march=@var{name}
  @opindex march
-@@ -12928,10 +12956,16 @@ more feature modifiers.  This option has the form
+@@ -12933,10 +12962,16 @@ more feature modifiers.  This option has the form
  @option{-march=@var{arch}@r{@{}+@r{[}no@r{]}@var{feature}@r{@}*}}.
  
  The permissible values for @var{arch} are @samp{armv8-a},
@@ -313,7 +314,7 @@
  enables the @samp{+crc} and @samp{+lse} features.
  
  The value @samp{native} is available on native AArch64 GNU/Linux and
-@@ -12955,18 +12989,18 @@ processors implementing the target architecture.
+@@ -12960,18 +12995,18 @@ processors implementing the target architecture.
  Specify the name of the target processor for which GCC should tune the
  performance of the code.  Permissible values for this option are:
  @samp{generic}, @samp{cortex-a35}, @samp{cortex-a53}, @samp{cortex-a57},
@@ -341,7 +342,7 @@
  
  Where none of @option{-mtune=}, @option{-mcpu=} or @option{-march=}
  are specified, the code is tuned to perform well across a range
-@@ -12986,12 +13020,6 @@ documented in the sub-section on
+@@ -12991,12 +13026,6 @@ documented in the sub-section on
  Feature Modifiers}.  Where conflicting feature modifiers are
  specified, the right-most feature is used.
  
@@ -354,7 +355,7 @@
  GCC uses @var{name} to determine what kind of instructions it can emit when
  generating assembly code (as if by @option{-march}) and to determine
  the target processor for which to tune for performance (as if
-@@ -13009,11 +13037,11 @@ across releases.
+@@ -13014,11 +13043,11 @@ across releases.
  This option is only intended to be useful when developing GCC.
  
  @item -mpc-relative-literal-loads
@@ -371,7 +372,7 @@
  
  @end table
  
-@@ -13041,12 +13069,14 @@ instructions.  This is on by default for all possible values for options
+@@ -13046,12 +13075,14 @@ instructions.  This is on by default for all possible values for options
  @item lse
  Enable Large System Extension instructions.  This is on by default for
  @option{-march=armv8.1-a}.
@@ -389,7 +390,7 @@
  
  @node Adapteva Epiphany Options
  @subsection Adapteva Epiphany Options
-@@ -13897,16 +13927,6 @@ system is required to provide these functions.  The default is
+@@ -13902,16 +13933,6 @@ system is required to provide these functions.  The default is
  @option{-mno-apcs-stack-check}, since this produces smaller code.
  
  @c not currently implemented
@@ -406,7 +407,7 @@
  @item -mapcs-reentrant
  @opindex mapcs-reentrant
  Generate reentrant, position-independent code.  The default is
-@@ -13966,21 +13986,42 @@ name to determine what kind of instructions it can emit when generating
+@@ -13971,21 +13992,42 @@ name to determine what kind of instructions it can emit when generating
  assembly code.  This option can be used in conjunction with or instead
  of the @option{-mcpu=} option.  Permissible names are: @samp{armv2},
  @samp{armv2a}, @samp{armv3}, @samp{armv3m}, @samp{armv4}, @samp{armv4t},
@@ -456,7 +457,7 @@
  @option{-march=native} causes the compiler to auto-detect the architecture
  of the build computer.  At present, this feature is only supported on
  GNU/Linux, and not all architectures are recognized.  If the auto-detect
-@@ -14012,8 +14053,10 @@ Permissible names are: @samp{arm2}, @samp{arm250},
+@@ -14017,8 +14059,10 @@ Permissible names are: @samp{arm2}, @samp{arm250},
  @samp{generic-armv7-a}, @samp{cortex-a5}, @samp{cortex-a7}, @samp{cortex-a8},
  @samp{cortex-a9}, @samp{cortex-a12}, @samp{cortex-a15}, @samp{cortex-a17},
  @samp{cortex-a32}, @samp{cortex-a35}, @samp{cortex-a53}, @samp{cortex-a57},
@@ -468,7 +469,7 @@
  @samp{cortex-m7},
  @samp{cortex-m4},
  @samp{cortex-m3},
-@@ -14034,7 +14077,8 @@ Permissible names are: @samp{arm2}, @samp{arm250},
+@@ -14039,7 +14083,8 @@ Permissible names are: @samp{arm2}, @samp{arm250},
  Additionally, this option can specify that GCC should tune the performance
  of the code for a big.LITTLE system.  Permissible names are:
  @samp{cortex-a15.cortex-a7}, @samp{cortex-a17.cortex-a7},
@@ -478,7 +479,7 @@
  
  @option{-mtune=generic-@var{arch}} specifies that GCC should tune the
  performance for a blend of processors within architecture @var{arch}.
-@@ -14072,12 +14116,14 @@ is unsuccessful the option has no effect.
+@@ -14077,12 +14122,14 @@ is unsuccessful the option has no effect.
  @item -mfpu=@var{name}
  @opindex mfpu
  This specifies what floating-point hardware (or hardware emulation) is
@@ -495,7 +496,7 @@
  
  If @option{-msoft-float} is specified this specifies the format of
  floating-point values.
-@@ -14164,9 +14210,12 @@ otherwise the default is @samp{R10}.
+@@ -14169,9 +14216,12 @@ otherwise the default is @samp{R10}.
  
  @item -mpic-data-is-text-relative
  @opindex mpic-data-is-text-relative
@@ -511,7 +512,7 @@
  
  @item -mpoke-function-name
  @opindex mpoke-function-name
-@@ -14276,10 +14325,10 @@ generating these instructions.  This option is enabled by default when
+@@ -14281,10 +14331,10 @@ generating these instructions.  This option is enabled by default when
  @opindex mno-unaligned-access
  Enables (or disables) reading and writing of 16- and 32- bit values
  from addresses that are not 16- or 32- bit aligned.  By default
@@ -526,10 +527,18 @@
  
  The ARM attribute @code{Tag_CPU_unaligned_access} is set in the
  generated object file to either true or false, depending upon the
-@@ -14319,6 +14368,12 @@ Print CPU tuning information as comment in assembler file.  This is
+@@ -14324,6 +14374,20 @@ Print CPU tuning information as comment in assembler file.  This is
  an option used only for regression testing of the compiler and not
  intended for ordinary use in compiling code.  This option is disabled
  by default.
++
++@item -mpure-code
++@opindex mpure-code
++Do not allow constant data to be placed in code sections.
++Additionally, when compiling for ELF object format give all text sections the
++ELF processor-specific section attribute @code{SHF_ARM_PURECODE}.  This option
++is only available when generating non-pic code for M-profile targets with the
++MOVT instruction.
 +
 +@item -mcmse
 +@opindex mcmse
@@ -539,7 +548,7 @@
  @end table
  
  @node AVR Options
-@@ -18081,7 +18136,7 @@ IEEE 754 floating-point data.
+@@ -18086,7 +18150,7 @@ IEEE 754 floating-point data.
  
  The @option{-mnan=legacy} option selects the legacy encoding.  In this
  case quiet NaNs (qNaNs) are denoted by the first bit of their trailing
@@ -550,7 +559,7 @@
  The @option{-mnan=2008} option selects the IEEE 754-2008 encoding.  In
 --- a/src/gcc/doc/md.texi
 +++ b/src/gcc/doc/md.texi
-@@ -5027,7 +5027,7 @@ it is unspecified which of the two operands is returned as the result.
+@@ -5030,7 +5030,7 @@ it is unspecified which of the two operands is returned as the result.
  IEEE-conformant minimum and maximum operations.  If one operand is a quiet
  @code{NaN}, then the other operand is returned.  If both operands are quiet
  @code{NaN}, then a quiet @code{NaN} is returned.  In the case when gcc supports
@@ -648,7 +657,7 @@
  @end table
  
  @subsubsection AArch64-specific attributes
-@@ -2066,6 +2121,28 @@ NEON support.  Only ARM targets support this feature, and only then
+@@ -2069,6 +2124,28 @@ NEON support.  Only ARM targets support this feature, and only then
  in certain modes; see the @ref{arm_neon_ok,,arm_neon_ok effective target
  keyword}.
  
@@ -677,7 +686,7 @@
  @item arm_neon_fp16
  NEON and half-precision floating point support.  Only ARM targets
  support this feature, and only then in certain modes; see
-@@ -2075,6 +2152,23 @@ the @ref{arm_neon_fp16_ok,,arm_neon_fp16_ok effective target keyword}.
+@@ -2078,6 +2155,23 @@ the @ref{arm_neon_fp16_ok,,arm_neon_fp16_ok effective target keyword}.
  arm vfp3 floating point support; see
  the @ref{arm_vfp3_ok,,arm_vfp3_ok effective target keyword}.
  
@@ -701,3 +710,35 @@
  @item bind_pic_locally
  Add the target-specific flags needed to enable functions to bind
  locally when using pic/PIC passes in the testsuite.
+--- a/src/gcc/doc/tm.texi
++++ b/src/gcc/doc/tm.texi
+@@ -7510,6 +7510,18 @@ is non-NULL, it is the @code{VAR_DECL} or @code{FUNCTION_DECL} with which
+ this section is associated.
+ @end deftypefn
+ 
++@deftypefn {Target Hook} bool TARGET_ASM_ELF_FLAGS_NUMERIC (unsigned int @var{flags}, unsigned int *@var{num})
++This hook can be used to encode ELF section flags for which no letter
++code has been defined in the assembler.  It is called by
++@code{default_asm_named_section} whenever the section flags need to be
++emitted in the assembler output.  If the hook returns true, then the
++numerical value for ELF section flags should be calculated from
++@var{flags} and saved in @var{*num}; the value is printed out instead of the
++normal sequence of letter codes.  If the hook is not defined, or if it
++returns false, then @var{num} is ignored and the traditional letter sequence
++is emitted.
++@end deftypefn
++
+ @deftypefn {Target Hook} {section *} TARGET_ASM_FUNCTION_SECTION (tree @var{decl}, enum node_frequency @var{freq}, bool @var{startup}, bool @var{exit})
+ Return preferred text (sub)section for function @var{decl}.
+ Main purpose of this function is to separate cold, normal and hot
+--- a/src/gcc/doc/tm.texi.in
++++ b/src/gcc/doc/tm.texi.in
+@@ -5209,6 +5209,8 @@ of the filename using this macro.
+ 
+ @hook TARGET_ASM_NAMED_SECTION
+ 
++@hook TARGET_ASM_ELF_FLAGS_NUMERIC
++
+ @hook TARGET_ASM_FUNCTION_SECTION
+ 
+ @hook TARGET_ASM_FUNCTION_SWITCHED_TEXT_SECTIONS

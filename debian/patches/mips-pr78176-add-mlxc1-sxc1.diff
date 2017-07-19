@@ -48,7 +48,7 @@ Index: b/src/gcc/config.gcc
 ===================================================================
 --- a/src/gcc/config.gcc
 +++ b/src/gcc/config.gcc
-@@ -3987,7 +3987,7 @@ case "${target}" in
+@@ -3976,7 +3976,7 @@ case "${target}" in
  		;;
  
  	mips*-*-*)
@@ -57,7 +57,7 @@ Index: b/src/gcc/config.gcc
  
  		case ${with_float} in
  		"" | soft | hard)
-@@ -4110,6 +4110,21 @@ case "${target}" in
+@@ -4099,6 +4099,21 @@ case "${target}" in
  			exit 1
  			;;
  		esac
@@ -79,7 +79,7 @@ Index: b/src/gcc/config.gcc
  		;;
  
  	nds32*-*-*)
-@@ -4543,7 +4558,7 @@ case ${target} in
+@@ -4532,7 +4547,7 @@ case ${target} in
  esac
  
  t=
@@ -101,7 +101,7 @@ Index: b/src/gcc/config/mips/mips.h
      }									\
    while (0)
  
-@@ -895,7 +897,8 @@ struct mips_cpu_info {
+@@ -847,7 +849,8 @@ struct mips_cpu_info {
    {"divide", "%{!mdivide-traps:%{!mdivide-breaks:-mdivide-%(VALUE)}}" }, \
    {"llsc", "%{!mllsc:%{!mno-llsc:-m%(VALUE)}}" }, \
    {"mips-plt", "%{!mplt:%{!mno-plt:-m%(VALUE)}}" }, \
@@ -111,7 +111,7 @@ Index: b/src/gcc/config/mips/mips.h
  
  /* A spec that infers the:
     -mnan=2008 setting from a -mips argument,
-@@ -1059,7 +1062,8 @@ struct mips_cpu_info {
+@@ -1011,7 +1014,8 @@ struct mips_cpu_info {
  
  /* ISA has floating-point indexed load and store instructions
     (LWXC1, LDXC1, SWXC1 and SDXC1).  */

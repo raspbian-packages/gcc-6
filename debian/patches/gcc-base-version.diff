@@ -5,19 +5,19 @@ Index: b/src/gcc/BASE-VER
 --- a/src/gcc/BASE-VER
 +++ b/src/gcc/BASE-VER
 @@ -1 +1 @@
--6.3.0
+-6.4.0
 +6
 Index: b/src/gcc/FULL-VER
 ===================================================================
 --- /dev/null
 +++ b/src/gcc/FULL-VER
 @@ -0,0 +1 @@
-+6.3.0
++6.4.0
 Index: b/src/gcc/Makefile.in
 ===================================================================
 --- a/src/gcc/Makefile.in
 +++ b/src/gcc/Makefile.in
-@@ -828,11 +828,13 @@ GTM_H     = tm.h      $(tm_file_list) in
+@@ -829,11 +829,13 @@ GTM_H     = tm.h      $(tm_file_list) in
  TM_H      = $(GTM_H) insn-flags.h $(OPTIONS_H)
  
  # Variables for version information.
@@ -32,7 +32,7 @@ Index: b/src/gcc/Makefile.in
  BASEVER_c   := $(shell cat $(BASEVER))
  DEVPHASE_c  := $(shell cat $(DEVPHASE))
  DATESTAMP_c := $(shell cat $(DATESTAMP))
-@@ -857,6 +859,7 @@ PATCHLEVEL_c := \
+@@ -858,6 +860,7 @@ PATCHLEVEL_c := \
  # immediately after the comma in the $(if ...) constructs is
  # significant - do not remove it.
  BASEVER_s   := "\"$(BASEVER_c)\""
@@ -40,7 +40,7 @@ Index: b/src/gcc/Makefile.in
  DEVPHASE_s  := "\"$(if $(DEVPHASE_c), ($(DEVPHASE_c)))\""
  DATESTAMP_s := \
    "\"$(if $(DEVPHASE_c)$(filter-out 0,$(PATCHLEVEL_c)), $(DATESTAMP_c))\""
-@@ -2015,8 +2018,8 @@ default-c.o: config/default-c.c
+@@ -2016,8 +2019,8 @@ default-c.o: config/default-c.c
  
  # Files used by all variants of C and some other languages.
  
@@ -51,7 +51,7 @@ Index: b/src/gcc/Makefile.in
  
  # Language-independent files.
  
-@@ -2024,7 +2027,8 @@ DRIVER_DEFINES = \
+@@ -2025,7 +2028,8 @@ DRIVER_DEFINES = \
    -DSTANDARD_STARTFILE_PREFIX=\"$(unlibsubdir)/\" \
    -DSTANDARD_EXEC_PREFIX=\"$(libdir)/gcc/\" \
    -DSTANDARD_LIBEXEC_PREFIX=\"$(libexecdir)/gcc/\" \
@@ -61,7 +61,7 @@ Index: b/src/gcc/Makefile.in
    -DDEFAULT_REAL_TARGET_MACHINE=\"$(real_target_noncanonical)\" \
    -DDEFAULT_TARGET_MACHINE=\"$(target_noncanonical)\" \
    -DSTANDARD_BINDIR_PREFIX=\"$(bindir)/\" \
-@@ -2074,20 +2078,20 @@ s-options-h: optionlist $(srcdir)/opt-fu
+@@ -2076,20 +2080,20 @@ s-options-h: optionlist $(srcdir)/opt-fu
  
  dumpvers: dumpvers.c
  
@@ -88,7 +88,7 @@ Index: b/src/gcc/Makefile.in
  	echo "#define BUILDING_GCC_VERSION (BUILDING_GCC_MAJOR * 1000 + BUILDING_GCC_MINOR)" >> bversion.h
  	$(STAMP) s-bversion
  
-@@ -2454,9 +2458,9 @@ build/%.o :  # dependencies provided by
+@@ -2456,9 +2460,9 @@ build/%.o :  # dependencies provided by
  ## build/version.o is compiled by the $(COMPILER_FOR_BUILD) but needs
  ## several C macro definitions, just like version.o
  build/version.o:  version.c version.h \
@@ -100,7 +100,7 @@ Index: b/src/gcc/Makefile.in
  	-DREVISION=$(REVISION_s) \
  	-DDEVPHASE=$(DEVPHASE_s) -DPKGVERSION=$(PKGVERSION_s) \
  	-DBUGURL=$(BUGURL_s) -o $@ $<
-@@ -2679,8 +2683,8 @@ PREPROCESSOR_DEFINES = \
+@@ -2681,8 +2685,8 @@ PREPROCESSOR_DEFINES = \
    -DSTANDARD_EXEC_PREFIX=\"$(libdir)/gcc/\" \
    @TARGET_SYSTEM_ROOT_DEFINE@
  
@@ -111,7 +111,7 @@ Index: b/src/gcc/Makefile.in
  
  CFLAGS-cppdefault.o += $(PREPROCESSOR_DEFINES)
  
-@@ -2696,8 +2700,8 @@ build/gcov-iov$(build_exeext): build/gco
+@@ -2698,8 +2702,8 @@ build/gcov-iov$(build_exeext): build/gco
  		build/gcov-iov.o -o $@
  
  gcov-iov.h: s-iov; @true
@@ -122,7 +122,7 @@ Index: b/src/gcc/Makefile.in
  	    > tmp-gcov-iov.h
  	$(SHELL) $(srcdir)/../move-if-change tmp-gcov-iov.h gcov-iov.h
  	$(STAMP) s-iov
-@@ -2976,8 +2980,8 @@ TEXI_GCCINSTALL_FILES = install.texi ins
+@@ -2978,8 +2982,8 @@ TEXI_GCCINSTALL_FILES = install.texi ins
  TEXI_CPPINT_FILES = cppinternals.texi gcc-common.texi gcc-vers.texi
  
  # gcc-vers.texi is generated from the version files.
@@ -161,7 +161,7 @@ Index: b/src/gcc/gcc.c
  
  /* The target machine.  */
  
-@@ -4492,7 +4493,7 @@ process_command (unsigned int decoded_op
+@@ -4502,7 +4503,7 @@ process_command (unsigned int decoded_op
       running, or, if that is not available, the configured prefix.  */
    tooldir_prefix
      = concat (gcc_exec_prefix ? gcc_exec_prefix : standard_exec_prefix,
@@ -170,7 +170,7 @@ Index: b/src/gcc/gcc.c
  	      accel_dir_suffix, dir_separator_str, tooldir_prefix2, NULL);
    free (tooldir_prefix2);
  
-@@ -7367,7 +7368,7 @@ driver::set_up_specs () const
+@@ -7377,7 +7378,7 @@ driver::set_up_specs () const
  
    /* Read specs from a file if there is one.  */
  
@@ -179,7 +179,7 @@ Index: b/src/gcc/gcc.c
  			   accel_dir_suffix, dir_separator_str, NULL);
    just_machine_suffix = concat (spec_machine, dir_separator_str, NULL);
  
-@@ -7572,7 +7573,7 @@ driver::set_up_specs () const
+@@ -7582,7 +7583,7 @@ driver::set_up_specs () const
    /* If we have a GCC_EXEC_PREFIX envvar, modify it for cpp's sake.  */
    if (gcc_exec_prefix)
      gcc_exec_prefix = concat (gcc_exec_prefix, spec_host_machine,

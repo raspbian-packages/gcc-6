@@ -1179,17 +1179,3 @@ Index: b/src/gcc/ada/gcc-interface/Make-lang.in
  
  ALL_ADAFLAGS = \
    $(CFLAGS) $(ADA_CFLAGS) $(ADAFLAGS) $(CHECKING_ADAFLAGS) $(WARN_ADAFLAGS)
-Index: b/src/libada/configure.ac
-===================================================================
---- a/src/libada/configure.ac
-+++ b/src/libada/configure.ac
-@@ -127,8 +127,7 @@ AC_PROG_AWK
- AC_PROG_LN_S
- 
- # Determine what to build for 'gnatlib'
--if test $build = $target \
--   && test ${enable_shared} = yes ; then
-+if test ${enable_shared} = yes ; then
-   # Note that build=target is almost certainly the wrong test; FIXME
-   default_gnatlib_target="gnatlib-shared"
- else

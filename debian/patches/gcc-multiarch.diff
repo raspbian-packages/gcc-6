@@ -127,7 +127,7 @@ Index: b/src/gcc/config.gcc
 ===================================================================
 --- a/src/gcc/config.gcc
 +++ b/src/gcc/config.gcc
-@@ -2085,6 +2085,11 @@ mips*-*-linux*)				# Linux MIPS, either
+@@ -2090,6 +2090,11 @@ mips*-*-linux*)				# Linux MIPS, either
  			target_cpu_default=MASK_SOFT_FLOAT_ABI
  			enable_mips_multilibs="yes"
  			;;
@@ -139,7 +139,7 @@ Index: b/src/gcc/config.gcc
  		mipsisa64r6*-*-linux*)
  			default_mips_abi=n32
  			default_mips_arch=mips64r6
-@@ -2095,6 +2100,10 @@ mips*-*-linux*)				# Linux MIPS, either
+@@ -2100,6 +2105,10 @@ mips*-*-linux*)				# Linux MIPS, either
  			default_mips_arch=mips64r2
  			enable_mips_multilibs="yes"
  			;;
@@ -150,7 +150,7 @@ Index: b/src/gcc/config.gcc
  		mips64*-*-linux* | mipsisa64*-*-linux*)
  			default_mips_abi=n32
  			enable_mips_multilibs="yes"
-@@ -4414,7 +4423,7 @@ case ${target} in
+@@ -4449,7 +4458,7 @@ case ${target} in
  	i[34567]86-*-darwin* | x86_64-*-darwin*)
  		;;
  	i[34567]86-*-linux* | x86_64-*-linux*)
@@ -178,7 +178,7 @@ Index: b/src/gcc/config/mips/mips.h
 ===================================================================
 --- a/src/gcc/config/mips/mips.h
 +++ b/src/gcc/config/mips/mips.h
-@@ -3375,16 +3375,6 @@ struct GTY(())  machine_function {
+@@ -3387,16 +3387,6 @@ struct GTY(())  machine_function {
  #define PMODE_INSN(NAME, ARGS) \
    (Pmode == SImode ? NAME ## _si ARGS : NAME ## _di ARGS)
  
