@@ -1,0 +1,2378 @@
+# DP: updates from the 6 branch upto 20170724 (r250470).
+
+last_update()
+{
+	cat > ${dir}LAST_UPDATED <EOF
+Mon Jul 24 10:35:40 CEST 2017
+Mon Jul 24 08:35:40 UTC 2017 (revision 250470)
+EOF
+}
+
+LANG=C svn diff svn://gcc.gnu.org/svn/gcc/tags/gcc_6_4_0_release svn://gcc.gnu.org/svn/gcc/branches/gcc-6-branch \
+	| sed -r 's,^--- (\S+)\t(\S+)(.*)$,--- a/src/\1\t\2,;s,^\+\+\+ (\S+)\t(\S+)(.*)$,+++ b/src/\1\t\2,' \
+	| awk '/^Index:.*\.(class|texi)/ {skip=1; next} /^Index:/ { skip=0 } skip==0'
+
+Index: libstdc++-v3/include/std/future
+===================================================================
+--- a/src/libstdc++-v3/include/std/future	(.../tags/gcc_6_4_0_release)
++++ b/src/libstdc++-v3/include/std/future	(.../branches/gcc-6-branch)
+@@ -462,7 +462,6 @@
+ 	  // Used by std::promise to copy construct the result.
+           typename promise<_Res>::_Ptr_type operator()() const
+           {
+-            _State_baseV2::_S_check(_M_promise->_M_future);
+             _M_promise->_M_storage->_M_set(*_M_arg);
+             return std::move(_M_promise->_M_storage);
+           }
+@@ -477,7 +476,6 @@
+ 	  // Used by std::promise to move construct the result.
+           typename promise<_Res>::_Ptr_type operator()() const
+           {
+-            _State_baseV2::_S_check(_M_promise->_M_future);
+             _M_promise->_M_storage->_M_set(std::move(*_M_arg));
+             return std::move(_M_promise->_M_storage);
+           }
+@@ -485,6 +483,18 @@
+           _Res*             _M_arg;
+         };
+ 
++      // set void
++      template<typename _Res>
++	struct _Setter<_Res, void>
++	{
++	  static_assert(is_void<_Res>::value, "Only used for promise<void>");
++
++	  typename promise<_Res>::_Ptr_type operator()() const
++	  { return std::move(_M_promise->_M_storage); }
++
++	  promise<_Res>*    _M_promise;
++	};
++
+       struct __exception_ptr_tag { };
+ 
+       // set exceptions
+@@ -494,7 +504,6 @@
+ 	  // Used by std::promise to store an exception as the result.
+           typename promise<_Res>::_Ptr_type operator()() const
+           {
+-            _State_baseV2::_S_check(_M_promise->_M_future);
+             _M_promise->_M_storage->_M_error = *_M_ex;
+             return std::move(_M_promise->_M_storage);
+           }
+@@ -507,6 +516,7 @@
+         static _Setter<_Res, _Arg&&>
+         __setter(promise<_Res>* __prom, _Arg&& __arg)
+         {
++	  _S_check(__prom->_M_future);
+           return _Setter<_Res, _Arg&&>{ __prom, std::__addressof(__arg) };
+         }
+ 
+@@ -514,9 +524,18 @@
+         static _Setter<_Res, __exception_ptr_tag>
+         __setter(exception_ptr& __ex, promise<_Res>* __prom)
+         {
++	  _S_check(__prom->_M_future);
+           return _Setter<_Res, __exception_ptr_tag>{ __prom, &__ex };
+         }
+ 
++      template<typename _Res>
++	static _Setter<_Res, void>
++	__setter(promise<_Res>* __prom)
++	{
++	  _S_check(__prom->_M_future);
++	  return _Setter<_Res, void>{ __prom };
++	}
++
+       template<typename _Tp>
+         static void
+         _S_check(const shared_ptr<_Tp>& __p)
+@@ -1014,6 +1033,7 @@
+       typedef __future_base::_Result<_Res>	_Res_type;
+       typedef __future_base::_Ptr<_Res_type>	_Ptr_type;
+       template<typename, typename> friend class _State::_Setter;
++      friend _State;
+ 
+       shared_ptr<_State>                        _M_future;
+       _Ptr_type                                 _M_storage;
+@@ -1124,6 +1144,7 @@
+       typedef __future_base::_Result<_Res&>	_Res_type;
+       typedef __future_base::_Ptr<_Res_type> 	_Ptr_type;
+       template<typename, typename> friend class _State::_Setter;
++      friend _State;
+ 
+       shared_ptr<_State>                        _M_future;
+       _Ptr_type                                 _M_storage;
+@@ -1213,6 +1234,7 @@
+       typedef __future_base::_Result<void>	_Res_type;
+       typedef __future_base::_Ptr<_Res_type> 	_Ptr_type;
+       template<typename, typename> friend class _State::_Setter;
++      friend _State;
+ 
+       shared_ptr<_State>                        _M_future;
+       _Ptr_type                                 _M_storage;
+@@ -1273,7 +1295,9 @@
+       { return future<void>(_M_future); }
+ 
+       // Setting the result
+-      void set_value();
++      void
++      set_value()
++      { _M_future->_M_set_result(_State::__setter(this)); }
+ 
+       void
+       set_exception(exception_ptr __p)
+@@ -1280,7 +1304,8 @@
+       { _M_future->_M_set_result(_State::__setter(__p, this)); }
+ 
+       void
+-      set_value_at_thread_exit();
++      set_value_at_thread_exit()
++      { _M_future->_M_set_delayed_result(_State::__setter(this), _M_future); }
+ 
+       void
+       set_exception_at_thread_exit(exception_ptr __p)
+@@ -1290,30 +1315,6 @@
+       }
+     };
+ 
+-  // set void
+-  template<>
+-    struct __future_base::_State_base::_Setter<void, void>
+-    {
+-      promise<void>::_Ptr_type operator()() const
+-      {
+-        _State_base::_S_check(_M_promise->_M_future);
+-        return std::move(_M_promise->_M_storage);
+-      }
+-
+-      promise<void>*    _M_promise;
+-    };
+-
+-  inline void
+-  promise<void>::set_value()
+-  { _M_future->_M_set_result(_State::_Setter<void, void>{ this }); }
+-
+-  inline void
+-  promise<void>::set_value_at_thread_exit()
+-  {
+-    _M_future->_M_set_delayed_result(_State::_Setter<void, void>{this},
+-				     _M_future);
+-  }
+-
+   template<typename _Ptr_type, typename _Fn, typename _Res>
+     struct __future_base::_Task_setter
+     {
+Index: libstdc++-v3/ChangeLog
+===================================================================
+--- a/src/libstdc++-v3/ChangeLog	(.../tags/gcc_6_4_0_release)
++++ b/src/libstdc++-v3/ChangeLog	(.../branches/gcc-6-branch)
+@@ -1,3 +1,34 @@
++2017-07-12  Jonathan Wakely  <jwakely@redhat.com>
++
++	* testsuite/30_threads/promise/members/at_thread_exit2.cc: Require
++	atomic builtins.
++
++2017-07-11  Jonathan Wakely  <jwakely@redhat.com>
++
++	Backport from mainline
++	2017-04-21  Jonathan Wakely  <jwakely@redhat.com>
++
++	PR libstdc++/80316
++	* include/std/future (_State_baseV2::_Setter::operator()): Remove
++	_S_check calls that are done after the pointer to the shared state is
++	already dereferenced.
++	(_State_baseV2::_Setter<_Res, void>): Define specialization for void
++	as partial specialization so it can be defined within the definition
++	of _State_baseV2.
++	(_State_baseV2::__setter): Call _S_check.
++	(_State_baseV2::__setter(promise<void>*)): Add overload for use by
++	promise<void>::set_value and promise<void>::set_value_at_thread_exit.
++	(promise<T>, promise<T&>, promise<void>): Make _State a friend.
++	(_State_baseV2::_Setter<void, void>): Remove explicit specialization.
++	(promise<void>::set_value, promise<void>::set_value_at_thread_exit):
++	Use new __setter overload.
++	* testsuite/30_threads/promise/members/at_thread_exit2.cc: New test.
++	* testsuite/30_threads/promise/members/set_exception.cc: Test
++	promise<T&> and promise<void> specializations.
++	* testsuite/30_threads/promise/members/set_exception2.cc: Likewise.
++	Test for no_state error condition.
++	* testsuite/30_threads/promise/members/set_value2.cc: Likewise.
++
+ 2017-07-04  Release Manager
+ 
+ 	* GCC 6.4.0 released.
+Index: libstdc++-v3/testsuite/30_threads/promise/members/set_exception2.cc
+===================================================================
+--- a/src/libstdc++-v3/testsuite/30_threads/promise/members/set_exception2.cc	(.../tags/gcc_6_4_0_release)
++++ b/src/libstdc++-v3/testsuite/30_threads/promise/members/set_exception2.cc	(.../branches/gcc-6-branch)
+@@ -23,10 +23,13 @@
+ // with this library; see the file COPYING3.  If not see
+ // <http://www.gnu.org/licenses/>.
+ 
++// Test that promise::set_exception throws when required.
+ 
+ #include <future>
+ #include <testsuite_hooks.h>
+ 
++// Check for promise_already_satisfied error conditions.
++
+ void test01()
+ {
+   bool test = false;
+@@ -85,9 +88,187 @@
+   VERIFY( test );
+ }
+ 
++void test03()
++{
++  bool test = false;
++
++  std::promise<int&> p1;
++  std::future<int&> f1 = p1.get_future();
++
++  p1.set_exception(std::make_exception_ptr(0));
++
++  try
++  {
++    p1.set_exception(std::make_exception_ptr(1));
++    VERIFY( false );
++  }
++  catch (std::future_error& e)
++  {
++    VERIFY(e.code() ==
++        std::make_error_code(std::future_errc::promise_already_satisfied));
++    test = true;
++  }
++
++  try
++  {
++    f1.get();
++    test = false;
++  }
++  catch(int i)
++  {
++    VERIFY( i == 0 );
++  }
++
++  VERIFY( test );
++}
++
++void test04()
++{
++  bool test = false;
++
++  std::promise<int&> p1;
++  std::future<int&> f1 = p1.get_future();
++
++  int i = 2;
++  p1.set_value(i);
++
++  try
++  {
++    p1.set_exception(std::make_exception_ptr(0));
++    VERIFY( false );
++  }
++  catch (std::future_error& e)
++  {
++    VERIFY(e.code() ==
++        std::make_error_code(std::future_errc::promise_already_satisfied));
++    test = true;
++  }
++
++  VERIFY( test );
++}
++
++void test05()
++{
++  bool test = false;
++
++  std::promise<void> p1;
++  std::future<void> f1 = p1.get_future();
++
++  p1.set_exception(std::make_exception_ptr(0));
++
++  try
++  {
++    p1.set_exception(std::make_exception_ptr(1));
++    VERIFY( false );
++  }
++  catch (std::future_error& e)
++  {
++    VERIFY(e.code() ==
++        std::make_error_code(std::future_errc::promise_already_satisfied));
++    test = true;
++  }
++
++  try
++  {
++    f1.get();
++    test = false;
++  }
++  catch(int i)
++  {
++    VERIFY( i == 0 );
++  }
++
++  VERIFY( test );
++}
++
++void test06()
++{
++  bool test = false;
++
++  std::promise<void> p1;
++  std::future<void> f1 = p1.get_future();
++
++  p1.set_value();
++
++  try
++  {
++    p1.set_exception(std::make_exception_ptr(0));
++    VERIFY( false );
++  }
++  catch (std::future_error& e)
++  {
++    VERIFY(e.code() ==
++        std::make_error_code(std::future_errc::promise_already_satisfied));
++    test = true;
++  }
++
++  VERIFY( test );
++}
++
++// Check for no_state error condition (PR libstdc++/80316)
++
++void test07()
++{
++  using namespace std;
++
++  promise<int> p1;
++  promise<int> p2(std::move(p1));
++  try
++  {
++    p1.set_exception(std::make_exception_ptr(1));
++    VERIFY( false );
++  }
++  catch (std::future_error& e)
++  {
++    VERIFY(e.code() == make_error_code(future_errc::no_state));
++  }
++}
++
++void test08()
++{
++  using namespace std;
++
++  promise<int&> p1;
++  promise<int&> p2(std::move(p1));
++  try
++  {
++    int i = 0;
++    p1.set_exception(std::make_exception_ptr(1));
++    VERIFY( false );
++  }
++  catch (std::future_error& e)
++  {
++    VERIFY(e.code() == make_error_code(future_errc::no_state));
++  }
++}
++
++void test09()
++{
++  using namespace std;
++
++  promise<void> p1;
++  promise<void> p2(std::move(p1));
++  try
++  {
++    p1.set_exception(std::make_exception_ptr(1));
++    VERIFY( false );
++  }
++  catch (std::future_error& e)
++  {
++    VERIFY(e.code() == make_error_code(future_errc::no_state));
++  }
++}
++
+ int main()
+ {
+   test01();
+   test02();
++  test03();
++  test04();
++  test05();
++  test06();
++  test07();
++  test08();
++  test09();
+   return 0;
+ }
+Index: libstdc++-v3/testsuite/30_threads/promise/members/at_thread_exit2.cc
+===================================================================
+--- a/src/libstdc++-v3/testsuite/30_threads/promise/members/at_thread_exit2.cc	(.../tags/gcc_6_4_0_release)
++++ b/src/libstdc++-v3/testsuite/30_threads/promise/members/at_thread_exit2.cc	(.../branches/gcc-6-branch)
+@@ -0,0 +1,168 @@
++// { dg-do run { target *-*-freebsd* *-*-dragonfly* *-*-netbsd* *-*-linux* *-*-gnu* *-*-solaris* *-*-cygwin *-*-rtems* *-*-darwin* powerpc-ibm-aix* } }
++// { dg-options "-pthread" { target *-*-freebsd* *-*-dragonfly* *-*-netbsd* *-*-linux* *-*-gnu* *-*-solaris* powerpc-ibm-aix* } }
++// { dg-require-effective-target c++11 }
++// { dg-require-cstdint "" }
++// { dg-require-gthreads "" }
++// { dg-require-atomic-builtins "" }
++
++// Copyright (C) 2014-2017 Free Software Foundation, Inc.
++//
++// This file is part of the GNU ISO C++ Library.  This library is free
++// software; you can redistribute it and/or modify it under the
++// terms of the GNU General Public License as published by the
++// Free Software Foundation; either version 3, or (at your option)
++// any later version.
++
++// This library is distributed in the hope that it will be useful,
++// but WITHOUT ANY WARRANTY; without even the implied warranty of
++// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++// GNU General Public License for more details.
++
++// You should have received a copy of the GNU General Public License along
++// with this library; see the file COPYING3.  If not see
++// <http://www.gnu.org/licenses/>.
++
++// Test set_value_at_thread_exit error conditions
++
++#include <future>
++#include <testsuite_hooks.h>
++
++void test01()
++{
++  std::promise<int> p1;
++  p1.set_value(1);
++  try
++  {
++    p1.set_value_at_thread_exit(2);
++    VERIFY( false );
++  }
++  catch (std::future_error& e)
++  {
++    VERIFY( e.code() == std::future_errc::promise_already_satisfied );
++  }
++  try
++  {
++    p1.set_exception_at_thread_exit(std::make_exception_ptr(3));
++    VERIFY( false );
++  }
++  catch (std::future_error& e)
++  {
++    VERIFY( e.code() == std::future_errc::promise_already_satisfied );
++  }
++
++  std::promise<int> p2(std::move(p1));
++  try
++  {
++    p1.set_value_at_thread_exit(2);
++    VERIFY( false );
++  }
++  catch (std::future_error& e)
++  {
++    VERIFY( e.code() == std::future_errc::no_state );
++  }
++  try
++  {
++    p1.set_exception_at_thread_exit(std::make_exception_ptr(3));
++    VERIFY( false );
++  }
++  catch (std::future_error& e)
++  {
++    VERIFY( e.code() == std::future_errc::no_state );
++  }
++}
++
++void test02()
++{
++  std::promise<int&> p1;
++  int i = 1;
++  p1.set_value(i);
++  try
++  {
++    p1.set_value_at_thread_exit(i);
++    VERIFY( false );
++  }
++  catch (std::future_error& e)
++  {
++    VERIFY( e.code() == std::future_errc::promise_already_satisfied );
++  }
++  try
++  {
++    p1.set_exception_at_thread_exit(std::make_exception_ptr(3));
++    VERIFY( false );
++  }
++  catch (std::future_error& e)
++  {
++    VERIFY( e.code() == std::future_errc::promise_already_satisfied );
++  }
++
++  std::promise<int&> p2(std::move(p1));
++  try
++  {
++    int i = 0;
++    p1.set_value_at_thread_exit(i);
++    VERIFY( false );
++  }
++  catch (std::future_error& e)
++  {
++    VERIFY( e.code() == std::future_errc::no_state );
++  }
++  try
++  {
++    p1.set_exception_at_thread_exit(std::make_exception_ptr(3));
++    VERIFY( false );
++  }
++  catch (std::future_error& e)
++  {
++    VERIFY( e.code() == std::future_errc::no_state );
++  }
++}
++
++void test03()
++{
++  std::promise<void> p1;
++  int i = 0;
++  p1.set_value();
++  try {
++    p1.set_value_at_thread_exit();
++    VERIFY( false );
++  }
++  catch (std::future_error& e)
++  {
++    VERIFY( e.code() == std::future_errc::promise_already_satisfied );
++  }
++  try
++  {
++    p1.set_exception_at_thread_exit(std::make_exception_ptr(3));
++    VERIFY( false );
++  }
++  catch (std::future_error& e)
++  {
++    VERIFY( e.code() == std::future_errc::promise_already_satisfied );
++  }
++
++  std::promise<void> p2(std::move(p1));
++  try {
++    p1.set_value_at_thread_exit();
++    VERIFY( false );
++  }
++  catch (std::future_error& e)
++  {
++    VERIFY( e.code() == std::future_errc::no_state );
++  }
++  try
++  {
++    p1.set_exception_at_thread_exit(std::make_exception_ptr(3));
++    VERIFY( false );
++  }
++  catch (std::future_error& e)
++  {
++    VERIFY( e.code() == std::future_errc::no_state );
++  }
++}
++
++int main()
++{
++  test01();
++  test02();
++  test03();
++}
+Index: libstdc++-v3/testsuite/30_threads/promise/members/set_exception.cc
+===================================================================
+--- a/src/libstdc++-v3/testsuite/30_threads/promise/members/set_exception.cc	(.../tags/gcc_6_4_0_release)
++++ b/src/libstdc++-v3/testsuite/30_threads/promise/members/set_exception.cc	(.../branches/gcc-6-branch)
+@@ -23,6 +23,7 @@
+ // with this library; see the file COPYING3.  If not see
+ // <http://www.gnu.org/licenses/>.
+ 
++// Test that promise::set_exception stores an exception.
+ 
+ #include <future>
+ #include <testsuite_hooks.h>
+@@ -50,8 +51,56 @@
+   VERIFY( !f1.valid() );
+ }
+ 
++void test02()
++{
++  bool test = false;
++
++  std::promise<int&> p1;
++  std::future<int&> f1 = p1.get_future();
++
++  VERIFY( f1.valid() );
++
++  p1.set_exception(std::make_exception_ptr(0));
++
++  try
++  {
++    f1.get();
++  }
++  catch (int)
++  {
++    test = true;
++  }
++  VERIFY( test );
++  VERIFY( !f1.valid() );
++}
++
++void test03()
++{
++  bool test = false;
++
++  std::promise<void> p1;
++  std::future<void> f1 = p1.get_future();
++
++  VERIFY( f1.valid() );
++
++  p1.set_exception(std::make_exception_ptr(0));
++
++  try
++  {
++    f1.get();
++  }
++  catch (int)
++  {
++    test = true;
++  }
++  VERIFY( test );
++  VERIFY( !f1.valid() );
++}
++
+ int main()
+ {
+   test01();
++  test02();
++  test03();
+   return 0;
+ }
+Index: libstdc++-v3/testsuite/30_threads/promise/members/set_value2.cc
+===================================================================
+--- a/src/libstdc++-v3/testsuite/30_threads/promise/members/set_value2.cc	(.../tags/gcc_6_4_0_release)
++++ b/src/libstdc++-v3/testsuite/30_threads/promise/members/set_value2.cc	(.../branches/gcc-6-branch)
+@@ -23,10 +23,13 @@
+ // with this library; see the file COPYING3.  If not see
+ // <http://www.gnu.org/licenses/>.
+ 
++// Test that promise::set_value throws when required.
+ 
+ #include <future>
+ #include <testsuite_hooks.h>
+ 
++// Check for promise_already_satisfied error conditions.
++
+ void test01()
+ {
+   bool test = false;
+@@ -81,9 +84,298 @@
+   VERIFY( test );
+ }
+ 
++void test03()
++{
++  bool test = false;
++
++  std::promise<int> p1;
++  std::future<int> f1 = p1.get_future();
++
++  p1.set_exception(std::make_exception_ptr(4));
++
++  try
++  {
++    p1.set_value(3);
++    VERIFY( false );
++  }
++  catch (std::future_error& e)
++  {
++    VERIFY(e.code() ==
++        std::make_error_code(std::future_errc::promise_already_satisfied));
++    test = true;
++  }
++
++  std::chrono::milliseconds delay(1);
++  VERIFY( f1.wait_for(delay) == std::future_status::ready );
++  test = false;
++  try
++  {
++    f1.get();
++    VERIFY( false );
++  }
++  catch (int e)
++  {
++    VERIFY(e == 4 );
++    test = true;
++  }
++
++  VERIFY( test );
++}
++
++void test04()
++{
++  bool test = false;
++
++  std::promise<int&> p1;
++  std::future<int&> f1 = p1.get_future();
++
++  int i = 1;
++  p1.set_value(i);
++
++  try
++  {
++    p1.set_value(i);
++    VERIFY( false );
++  }
++  catch (std::future_error& e)
++  {
++    VERIFY(e.code() ==
++        std::make_error_code(std::future_errc::promise_already_satisfied));
++    test = true;
++  }
++
++  std::chrono::milliseconds delay(1);
++  VERIFY( f1.wait_for(delay) == std::future_status::ready );
++  VERIFY( f1.get() == 1 );
++  VERIFY( test );
++}
++
++void test05()
++{
++  bool test = false;
++
++  std::promise<int&> p1;
++  std::future<int&> f1 = p1.get_future();
++
++  int i = 3;
++  p1.set_value(i);
++
++  try
++  {
++    p1.set_exception(std::make_exception_ptr(4));
++    VERIFY( false );
++  }
++  catch (std::future_error& e)
++  {
++    VERIFY(e.code() ==
++        std::make_error_code(std::future_errc::promise_already_satisfied));
++    test = true;
++  }
++
++  std::chrono::milliseconds delay(1);
++  VERIFY( f1.wait_for(delay) == std::future_status::ready );
++  VERIFY( f1.get() == 3 );
++  VERIFY( test );
++}
++
++void test06()
++{
++  bool test = false;
++
++  std::promise<int&> p1;
++  std::future<int&> f1 = p1.get_future();
++
++  p1.set_exception(std::make_exception_ptr(4));
++
++  try
++  {
++    int i = 3;
++    p1.set_value(i);
++    VERIFY( false );
++  }
++  catch (std::future_error& e)
++  {
++    VERIFY(e.code() ==
++        std::make_error_code(std::future_errc::promise_already_satisfied));
++    test = true;
++  }
++
++  std::chrono::milliseconds delay(1);
++  VERIFY( f1.wait_for(delay) == std::future_status::ready );
++  test = false;
++  try
++  {
++    f1.get();
++    VERIFY( false );
++  }
++  catch (int e)
++  {
++    VERIFY(e == 4 );
++    test = true;
++  }
++
++  VERIFY( test );
++}
++
++void test07()
++{
++  bool test = false;
++
++  std::promise<void> p1;
++  std::future<void> f1 = p1.get_future();
++
++  p1.set_value();
++
++  try
++  {
++    p1.set_value();
++    VERIFY( false );
++  }
++  catch (std::future_error& e)
++  {
++    VERIFY(e.code() ==
++        std::make_error_code(std::future_errc::promise_already_satisfied));
++    test = true;
++  }
++
++  std::chrono::milliseconds delay(1);
++  VERIFY( f1.wait_for(delay) == std::future_status::ready );
++  f1.get();
++  VERIFY( test );
++}
++
++void test08()
++{
++  bool test = false;
++
++  std::promise<void> p1;
++  std::future<void> f1 = p1.get_future();
++
++  p1.set_value();
++
++  try
++  {
++    p1.set_exception(std::make_exception_ptr(4));
++    VERIFY( false );
++  }
++  catch (std::future_error& e)
++  {
++    VERIFY(e.code() ==
++        std::make_error_code(std::future_errc::promise_already_satisfied));
++    test = true;
++  }
++
++  std::chrono::milliseconds delay(1);
++  VERIFY( f1.wait_for(delay) == std::future_status::ready );
++  f1.get();
++  VERIFY( test );
++}
++
++void test09()
++{
++  bool test = false;
++
++  std::promise<void> p1;
++  std::future<void> f1 = p1.get_future();
++
++  p1.set_exception(std::make_exception_ptr(4));
++
++  try
++  {
++    p1.set_value();
++    VERIFY( false );
++  }
++  catch (std::future_error& e)
++  {
++    VERIFY(e.code() ==
++        std::make_error_code(std::future_errc::promise_already_satisfied));
++    test = true;
++  }
++
++  std::chrono::milliseconds delay(1);
++  VERIFY( f1.wait_for(delay) == std::future_status::ready );
++  test = false;
++  try
++  {
++    f1.get();
++    VERIFY( false );
++  }
++  catch (int e)
++  {
++    VERIFY(e == 4 );
++    test = true;
++  }
++
++  VERIFY( test );
++}
++
++// Check for no_state error condition (PR libstdc++/80316)
++
++void test10()
++{
++  using namespace std;
++
++  promise<int> p1;
++  promise<int> p2(std::move(p1));
++  try
++  {
++    p1.set_value(1);
++    VERIFY( false );
++  }
++  catch (std::future_error& e)
++  {
++    VERIFY(e.code() == make_error_code(future_errc::no_state));
++  }
++}
++
++void test11()
++{
++  using namespace std;
++
++  promise<int&> p1;
++  promise<int&> p2(std::move(p1));
++  try
++  {
++    int i = 0;
++    p1.set_value(i);
++    VERIFY( false );
++  }
++  catch (std::future_error& e)
++  {
++    VERIFY(e.code() == make_error_code(future_errc::no_state));
++  }
++}
++
++void test12()
++{
++  using namespace std;
++
++  promise<void> p1;
++  promise<void> p2(std::move(p1));
++  try
++  {
++    p1.set_value();
++    VERIFY( false );
++  }
++  catch (std::future_error& e)
++  {
++    VERIFY(e.code() == make_error_code(future_errc::no_state));
++  }
++}
++
+ int main()
+ {
+   test01();
+   test02();
++  test03();
++  test04();
++  test05();
++  test06();
++  test07();
++  test08();
++  test09();
++  test10();
++  test11();
++  test12();
+   return 0;
+ }
+Index: libgcc/ChangeLog
+===================================================================
+--- a/src/libgcc/ChangeLog	(.../tags/gcc_6_4_0_release)
++++ b/src/libgcc/ChangeLog	(.../branches/gcc-6-branch)
+@@ -1,3 +1,26 @@
++2017-07-20  Peter Bergner  <bergner@vnet.ibm.com>
++
++	Backport from mainline
++	2017-07-07  Peter Bergner  <bergner@vnet.ibm.com>
++
++	* config/rs6000/float128-ifunc.c: Don't include auxv.h.
++	(have_ieee_hw_p): Delete function.
++	(SW_OR_HW) Use __builtin_cpu_supports().
++
++2017-07-04  Joseph Myers  <joseph@codesourcery.com>
++
++	* config/aarch64/linux-unwind.h (aarch64_fallback_frame_state),
++	config/alpha/linux-unwind.h (alpha_fallback_frame_state),
++	config/bfin/linux-unwind.h (bfin_fallback_frame_state),
++	config/i386/linux-unwind.h (x86_64_fallback_frame_state,
++	x86_fallback_frame_state), config/m68k/linux-unwind.h (struct
++	uw_ucontext), config/nios2/linux-unwind.h (struct nios2_ucontext),
++	config/pa/linux-unwind.h (pa32_fallback_frame_state),
++	config/sh/linux-unwind.h (sh_fallback_frame_state),
++	config/tilepro/linux-unwind.h (tile_fallback_frame_state),
++	config/xtensa/linux-unwind.h (xtensa_fallback_frame_state): Use
++	ucontext_t instead of struct ucontext.
++
+ 2017-07-04  Release Manager
+ 
+ 	* GCC 6.4.0 released.
+Index: libgcc/config/alpha/linux-unwind.h
+===================================================================
+--- a/src/libgcc/config/alpha/linux-unwind.h	(.../tags/gcc_6_4_0_release)
++++ b/src/libgcc/config/alpha/linux-unwind.h	(.../branches/gcc-6-branch)
+@@ -51,7 +51,7 @@
+     {
+       struct rt_sigframe {
+ 	siginfo_t info;
+-	struct ucontext uc;
++	ucontext_t uc;
+       } *rt_ = context->cfa;
+       sc = &rt_->uc.uc_mcontext;
+     }
+Index: libgcc/config/m68k/linux-unwind.h
+===================================================================
+--- a/src/libgcc/config/m68k/linux-unwind.h	(.../tags/gcc_6_4_0_release)
++++ b/src/libgcc/config/m68k/linux-unwind.h	(.../branches/gcc-6-branch)
+@@ -33,7 +33,7 @@
+ /* <sys/ucontext.h> is unfortunately broken right now.  */
+ struct uw_ucontext {
+ 	unsigned long	  uc_flags;
+-	struct ucontext  *uc_link;
++	ucontext_t	 *uc_link;
+ 	stack_t		  uc_stack;
+ 	mcontext_t	  uc_mcontext;
+ 	unsigned long	  uc_filler[80];
+Index: libgcc/config/aarch64/linux-unwind.h
+===================================================================
+--- a/src/libgcc/config/aarch64/linux-unwind.h	(.../tags/gcc_6_4_0_release)
++++ b/src/libgcc/config/aarch64/linux-unwind.h	(.../branches/gcc-6-branch)
+@@ -52,7 +52,7 @@
+   struct rt_sigframe
+   {
+     siginfo_t info;
+-    struct ucontext uc;
++    ucontext_t uc;
+   };
+ 
+   struct rt_sigframe *rt_;
+Index: libgcc/config/i386/linux-unwind.h
+===================================================================
+--- a/src/libgcc/config/i386/linux-unwind.h	(.../tags/gcc_6_4_0_release)
++++ b/src/libgcc/config/i386/linux-unwind.h	(.../branches/gcc-6-branch)
+@@ -58,7 +58,7 @@
+   if (*(unsigned char *)(pc+0) == 0x48
+       && *(unsigned long long *)(pc+1) == RT_SIGRETURN_SYSCALL)
+     {
+-      struct ucontext *uc_ = context->cfa;
++      ucontext_t *uc_ = context->cfa;
+       /* The void * cast is necessary to avoid an aliasing warning.
+          The aliasing warning is correct, but should not be a problem
+          because it does not alias anything.  */
+@@ -138,7 +138,7 @@
+ 	siginfo_t *pinfo;
+ 	void *puc;
+ 	siginfo_t info;
+-	struct ucontext uc;
++	ucontext_t uc;
+       } *rt_ = context->cfa;
+       /* The void * cast is necessary to avoid an aliasing warning.
+          The aliasing warning is correct, but should not be a problem
+Index: libgcc/config/rs6000/float128-ifunc.c
+===================================================================
+--- a/src/libgcc/config/rs6000/float128-ifunc.c	(.../tags/gcc_6_4_0_release)
++++ b/src/libgcc/config/rs6000/float128-ifunc.c	(.../branches/gcc-6-branch)
+@@ -45,48 +45,8 @@
+ #error "This module must not be compiled with IEEE 128-bit hardware support"
+ #endif
+ 
+-#include <sys/auxv.h>
++#define SW_OR_HW(SW, HW) (__builtin_cpu_supports ("ieee128") ? HW : SW)
+ 
+-/* Use the namespace clean version of getauxval.  However, not all versions of
+-   sys/auxv.h declare it, so declare it here.  This code is intended to be
+-   temporary until a suitable version of __builtin_cpu_supports is added that
+-   allows us to tell quickly if the machine supports IEEE 128-bit hardware.  */
+-extern unsigned long __getauxval (unsigned long);
+-
+-static int
+-have_ieee_hw_p (void)
+-{
+-  static int ieee_hw_p = -1;
+-
+-  if (ieee_hw_p < 0)
+-    {
+-      char *p = (char *) __getauxval (AT_PLATFORM);
+-
+-      ieee_hw_p = 0;
+-
+-      /* Don't use atoi/strtol/strncmp/etc.  These may require the normal
+-	 environment to be setup to set errno to 0, and the ifunc resolvers run
+-	 before the whole glibc environment is initialized.  */
+-      if (p && p[0] == 'p' && p[1] == 'o' && p[2] == 'w' && p[3] == 'e'
+-	  && p[4] == 'r')
+-	{
+-	  long n = 0;
+-	  char ch;
+-
+-	  p += 5;
+-	  while ((ch = *p++) >= '0' && (ch <= '9'))
+-	    n = (n * 10) + (ch - '0');
+-
+-	  if (n >= 9)
+-	    ieee_hw_p = 1;
+-	}
+-    }
+-
+-  return ieee_hw_p;
+-}
+-
+-#define SW_OR_HW(SW, HW) (have_ieee_hw_p () ? HW : SW)
+-
+ /* Resolvers.  */
+ 
+ /* We do not provide ifunc resolvers for __fixkfti, __fixunskfti, __floattikf,
+Index: libgcc/config/sh/linux-unwind.h
+===================================================================
+--- a/src/libgcc/config/sh/linux-unwind.h	(.../tags/gcc_6_4_0_release)
++++ b/src/libgcc/config/sh/linux-unwind.h	(.../branches/gcc-6-branch)
+@@ -180,7 +180,7 @@
+     {
+       struct rt_sigframe {
+ 	siginfo_t info;
+-	struct ucontext uc;
++	ucontext_t uc;
+       } *rt_ = context->cfa;
+       /* The void * cast is necessary to avoid an aliasing warning.
+          The aliasing warning is correct, but should not be a problem
+Index: libgcc/config/tilepro/linux-unwind.h
+===================================================================
+--- a/src/libgcc/config/tilepro/linux-unwind.h	(.../tags/gcc_6_4_0_release)
++++ b/src/libgcc/config/tilepro/linux-unwind.h	(.../branches/gcc-6-branch)
+@@ -61,7 +61,7 @@
+   struct rt_sigframe {
+     unsigned char save_area[C_ABI_SAVE_AREA_SIZE];
+     siginfo_t info;
+-    struct ucontext uc;
++    ucontext_t uc;
+   } *rt_;
+ 
+   /* Return if this is not a signal handler.  */
+Index: libgcc/config/pa/linux-unwind.h
+===================================================================
+--- a/src/libgcc/config/pa/linux-unwind.h	(.../tags/gcc_6_4_0_release)
++++ b/src/libgcc/config/pa/linux-unwind.h	(.../branches/gcc-6-branch)
+@@ -80,7 +80,7 @@
+   struct sigcontext *sc;
+   struct rt_sigframe {
+     siginfo_t info;
+-    struct ucontext uc;
++    ucontext_t uc;
+   } *frame;
+ 
+   /* rt_sigreturn trampoline:
+Index: libgcc/config/xtensa/linux-unwind.h
+===================================================================
+--- a/src/libgcc/config/xtensa/linux-unwind.h	(.../tags/gcc_6_4_0_release)
++++ b/src/libgcc/config/xtensa/linux-unwind.h	(.../branches/gcc-6-branch)
+@@ -67,7 +67,7 @@
+ 
+   struct rt_sigframe {
+     siginfo_t info;
+-    struct ucontext uc;
++    ucontext_t uc;
+   } *rt_;
+ 
+   /* movi a2, __NR_rt_sigreturn; syscall */
+Index: libgcc/config/nios2/linux-unwind.h
+===================================================================
+--- a/src/libgcc/config/nios2/linux-unwind.h	(.../tags/gcc_6_4_0_release)
++++ b/src/libgcc/config/nios2/linux-unwind.h	(.../branches/gcc-6-branch)
+@@ -38,7 +38,7 @@
+ 
+ struct nios2_ucontext {
+   unsigned long uc_flags;
+-  struct ucontext *uc_link;
++  ucontext_t *uc_link;
+   stack_t uc_stack;
+   struct nios2_mcontext uc_mcontext;
+   sigset_t uc_sigmask;	/* mask last for extensibility */
+Index: libgcc/config/bfin/linux-unwind.h
+===================================================================
+--- a/src/libgcc/config/bfin/linux-unwind.h	(.../tags/gcc_6_4_0_release)
++++ b/src/libgcc/config/bfin/linux-unwind.h	(.../branches/gcc-6-branch)
+@@ -52,7 +52,7 @@
+ 	void *puc;
+ 	char retcode[8];
+ 	siginfo_t info;
+-	struct ucontext uc;
++	ucontext_t uc;
+       } *rt_ = context->cfa;
+ 
+       /* The void * cast is necessary to avoid an aliasing warning.
+Index: gcc/tree-ssa-tail-merge.c
+===================================================================
+--- a/src/gcc/tree-ssa-tail-merge.c	(.../tags/gcc_6_4_0_release)
++++ b/src/gcc/tree-ssa-tail-merge.c	(.../branches/gcc-6-branch)
+@@ -808,6 +808,9 @@
+ same_succ_flush_bb (basic_block bb)
+ {
+   same_succ *same = BB_SAME_SUCC (bb);
++  if (! same)
++    return;
++
+   BB_SAME_SUCC (bb) = NULL;
+   if (bitmap_single_bit_set_p (same->bbs))
+     same_succ_htab->remove_elt_with_hash (same, same->hashval);
+Index: gcc/DATESTAMP
+===================================================================
+--- a/src/gcc/DATESTAMP	(.../tags/gcc_6_4_0_release)
++++ b/src/gcc/DATESTAMP	(.../branches/gcc-6-branch)
+@@ -1 +1 @@
+-20170704
++20170724
+Index: gcc/ChangeLog
+===================================================================
+--- a/src/gcc/ChangeLog	(.../tags/gcc_6_4_0_release)
++++ b/src/gcc/ChangeLog	(.../branches/gcc-6-branch)
+@@ -1,3 +1,89 @@
++2017-07-18  Uros Bizjak  <ubizjak@gmail.com>
++
++	PR target/81471
++	* config/i386/i386.md (rorx_immediate_operand): New mode attribute.
++	(*bmi2_rorx<mode>3_1): Use rorx_immediate_operand as
++	operand 2 predicate.
++	(*bmi2_rorxsi3_1_zext): Use const_0_to_31_operand as
++	operand 2 predicate.
++	(ror,rol -> rorx splitters): Use const_int_operand as
++	operand 2 predicate.
++
++2017-07-17  Georg-Johann Lay  <avr@gjlay.de>
++
++	Backport from 2017-07-17 trunk r250258.
++
++	PR 80929
++	* config/avr/avr.c (avr_mul_highpart_cost): New static function.
++	(avr_rtx_costs_1) [TRUNCATE]: Use it to compute mul_highpart cost.
++	[LSHIFTRT, outer_code = TRUNCATE]: Same.
++
++2017-07-14  Kelvin Nilsen  <kelvin@gcc.gnu.org>
++
++	Backports from trunk
++
++	2017-03-23  Kelvin Nilsen  <kelvin@gcc.gnu.org>
++	* config/rs6000/rs6000.c (rs6000_option_override_internal): Change
++	handling of certain combinations of target options, including the
++	combinations -mpower8-vector vs. -mno-vsx, -mpower8-vector vs.
++	-mno-power8-vector, and -mpower9_dform vs. -mno-power9-vector.
++
++	2017-03-27  Kelvin Nilsen  <kelvin@gcc.gnu.org>
++	PR target/80103
++	* config/rs6000/rs6000.c (rs6000_option_override_internal): Add
++	special handling for target option conflicts between dform options
++	(-mpower9-dform, -mpower9-dform-vector, -mpower9-dform-scalar) and
++	-mno-direct-move.
++
++	2017-05-08  Kelvin Nilsen  <kelvin@gcc.gnu.org>
++	PR target/80101
++	* config/rs6000/power6.md: Replace store_data_bypass_p calls with
++	rs6000_store_data_bypass_p in seven define_bypass directives and
++	in several comments.
++	* config/rs6000/rs6000-protos.h: Add prototype for
++	rs6000_store_data_bypass_p function.
++	* config/rs6000/rs6000.c (rs6000_store_data_bypass_p): New
++	function implements slightly different (rs6000-specific) semantics
++	than store_data_bypass_p, returning false rather than aborting
++	with assertion error when arguments do not satisfy the
++	requirements of store data bypass.
++	(rs6000_adjust_cost): Replace six calls of store_data_bypass_p with
++	rs6000_store_data_bypass_p.
++
++2017-07-14  Uros Bizjak  <ubizjak@gmail.com>
++
++	Backport from mainline
++	2017-07-10  Uros Bizjak  <ubizjak@gmail.com>
++
++	PR target/81375
++	* config/i386/i386.md (divsf3): Add TARGET_SSE to TARGET_SSE_MATH.
++	(rcpps): Ditto.
++	(*rsqrtsf2_sse): Ditto.
++	(rsqrtsf2): Ditto.
++	(div<mode>3): Macroize insn from divdf3 and divsf3
++	using MODEF mode iterator.
++
++	Backport from mainline
++	2017-07-04  Uros Bizjak  <ubizjak@gmail.com>
++
++	PR target/81300
++	* config/i386/i386.md (setcc + movzbl/and to xor + setcc peepholes):
++	Require dead FLAGS_REG at the beginning of a peephole.
++
++2017-07-13  Tom de Vries  <tom@codesourcery.com>
++
++	backport from mainline:
++	PR tree-optimization/81192
++	2017-07-03  Tom de Vries  <tom@codesourcery.com>
++
++	* tree-ssa-tail-merge.c (same_succ_flush_bb): Handle
++	BB_SAME_SUCC (bb) == NULL.
++
++2017-07-06  Andrew Pinski  <apinski@cavium.com>
++
++	* config/aarch64/aarch64.c (aarch64_load_symref_appropriately):
++	Access the lower part of RTX appropriately.
++
+ 2017-07-04  Release Manager
+ 
+ 	* GCC 6.4.0 released.
+@@ -83,7 +173,7 @@
+ 	Backport from mainline
+ 	2017-05-04  Prakhar Bahuguna  <prakhar.bahuguna@arm.com>
+ 
+-	* gcc/config/arm/arm-builtins.c (arm_init_builtins): Rename
++	* config/arm/arm-builtins.c (arm_init_builtins): Rename
+ 	__builtin_arm_ldfscr to __builtin_arm_get_fpscr, and rename
+ 	__builtin_arm_stfscr to __builtin_arm_set_fpscr.
+ 
+@@ -417,7 +507,7 @@
+ 
+ 	PR target/80968
+ 	* config/sparc/sparc.c (sparc_flat_expand_epilogue): Don't
+-        emit frame blockage here.
++	emit frame blockage here.
+ 	(sparc_expand_epilogue): Do it here.
+ 	* config/sparc/sparc.md (return expander): Emit frame blockage
+ 	for alloca here too.
+Index: gcc/testsuite/gcc.target/powerpc/pr80103-1.c
+===================================================================
+--- a/src/gcc/testsuite/gcc.target/powerpc/pr80103-1.c	(.../tags/gcc_6_4_0_release)
++++ b/src/gcc/testsuite/gcc.target/powerpc/pr80103-1.c	(.../branches/gcc-6-branch)
+@@ -0,0 +1,16 @@
++/* { dg-do compile { target { powerpc*-*-* } } } */
++/* { dg-skip-if "do not override -mcpu" { powerpc*-*-* } { "-mcpu=*" } { "-mcpu=power9" } } */
++/* { dg-require-effective-target powerpc_p9vector_ok } */
++/* { dg-options "-mpower9-dform-vector -mno-direct-move" } */
++/* { dg-excess-errors "expect error due to conflicting target options" } */
++/* Since the error message is not associated with a particular line
++   number, we cannot use the dg-error directive and cannot specify a
++   regexp to describe the expected error message.  The expected error
++   message is: "-mpower9-dform, -mpower9-dform-vector,
++                -mpower9-dform-scalar require -mdirect-move" */
++
++int a;
++void b (__attribute__ ((__vector_size__ (16))) char c)
++{
++  a = ((__attribute__ ((__vector_size__ (2 * sizeof (long)))) long) c)[0];
++}
+Index: gcc/testsuite/gcc.target/powerpc/cpu-builtin-1.c
+===================================================================
+--- a/src/gcc/testsuite/gcc.target/powerpc/cpu-builtin-1.c	(.../tags/gcc_6_4_0_release)
++++ b/src/gcc/testsuite/gcc.target/powerpc/cpu-builtin-1.c	(.../branches/gcc-6-branch)
+@@ -4,6 +4,11 @@
+ void
+ use_cpu_is_builtins (unsigned int *p)
+ {
++  /* If GCC was configured to use an old GLIBC (before 2.23), the
++     __builtin_cpu_is and __builtin_cpu_supports built-in functions return 0,
++     and the compiler issues a warning that you need a newer glibc to use them.
++     Use #ifdef to avoid the warning.  */
++#ifdef __BUILTIN_CPU_SUPPORTS__
+   p[0] = __builtin_cpu_is ("power9");
+   p[1] = __builtin_cpu_is ("power8");
+   p[2] = __builtin_cpu_is ("power7");
+@@ -19,11 +24,15 @@
+   p[12] = __builtin_cpu_is ("ppc440");
+   p[13] = __builtin_cpu_is ("ppc405");
+   p[14] = __builtin_cpu_is ("ppc-cell-be");
++#else
++  p[0] = 0;
++#endif
+ }
+ 
+ void
+ use_cpu_supports_builtins (unsigned int *p)
+ {
++#ifdef __BUILTIN_CPU_SUPPORTS__
+   p[0] = __builtin_cpu_supports ("4xxmac");
+   p[1] = __builtin_cpu_supports ("altivec");
+   p[2] = __builtin_cpu_supports ("arch_2_05");
+@@ -62,4 +71,7 @@
+   p[35] = __builtin_cpu_supports ("ucache");
+   p[36] = __builtin_cpu_supports ("vcrypto");
+   p[37] = __builtin_cpu_supports ("vsx");
++#else
++  p[0] = 0;
++#endif
+ }
+Index: gcc/testsuite/gcc.target/powerpc/pr80101-1.c
+===================================================================
+--- a/src/gcc/testsuite/gcc.target/powerpc/pr80101-1.c	(.../tags/gcc_6_4_0_release)
++++ b/src/gcc/testsuite/gcc.target/powerpc/pr80101-1.c	(.../branches/gcc-6-branch)
+@@ -0,0 +1,22 @@
++/* { dg-do compile { target { powerpc*-*-* } } } */
++/* { dg-skip-if "do not override -mcpu" { powerpc*-*-* } { "-mcpu=*" } { "-mcpu=power6" } } */
++/* { dg-require-effective-target dfp_hw } */
++/* { dg-options "-mcpu=power6 -mno-sched-epilog -Ofast" } */
++
++/* Prior to resolving PR 80101, this test case resulted in an internal
++   compiler error.  The role of this test program is to assure that
++   dejagnu's "test for excess errors" does not find any.  */
++
++int b;
++
++void e ();
++
++int c ()
++{
++  struct
++  {
++    int a[b];
++  } d;
++  if (d.a[0])
++    e ();
++}
+Index: gcc/testsuite/gcc.target/powerpc/p9-options-1.c
+===================================================================
+--- a/src/gcc/testsuite/gcc.target/powerpc/p9-options-1.c	(.../tags/gcc_6_4_0_release)
++++ b/src/gcc/testsuite/gcc.target/powerpc/p9-options-1.c	(.../branches/gcc-6-branch)
+@@ -0,0 +1,28 @@
++/* { dg-do compile { target { powerpc*-*-* } } } */
++/* { dg-skip-if "do not override -mcpu" { powerpc*-*-* } { "-mcpu=*" } { "-mcpu=power9" } } */
++/* { dg-require-effective-target powerpc_p9vector_ok } */
++/* { dg-options "-mcpu=power9 -mno-power9-vector" } */
++
++#include <altivec.h>
++
++/* This program's "test for excess errors" demonstrates that combining
++   the target options -mcpu=power9 and -mno-power9-vector does not
++   result in an error.  A previous version of the compiler aborted
++   with the error message:
++
++      "power9-dform requires power9-vector."
++
++   when these two options were used in combination.
++
++   The newer version of the compiler, instead, automatically disables
++   power9-dform when the -mno-power9-vector command-line option is
++   specified.  */
++int
++test_any_equal (vector bool char *arg1_p, vector bool char *arg2_p)
++{
++  vector bool char arg_1 = *arg1_p;
++  vector bool char arg_2 = *arg2_p;
++
++  return vec_any_eq (arg_1, arg_2);
++}
++
+Index: gcc/testsuite/gcc.target/aarch64/pr71112.c
+===================================================================
+--- a/src/gcc/testsuite/gcc.target/aarch64/pr71112.c	(.../tags/gcc_6_4_0_release)
++++ b/src/gcc/testsuite/gcc.target/aarch64/pr71112.c	(.../branches/gcc-6-branch)
+@@ -0,0 +1,10 @@
++/* PR target/71112.  */
++/* { dg-additional-options "-fpie" { target pie } } */
++
++extern int dbs[100];
++void f (int *);
++int nscd_init (void)
++{
++  f (dbs);
++  return 0;
++}
+Index: gcc/testsuite/gcc.target/i386/pr81471.c
+===================================================================
+--- a/src/gcc/testsuite/gcc.target/i386/pr81471.c	(.../tags/gcc_6_4_0_release)
++++ b/src/gcc/testsuite/gcc.target/i386/pr81471.c	(.../branches/gcc-6-branch)
+@@ -0,0 +1,13 @@
++/* PR target/81471 */
++/* { dg-do compile { target { ! ia32 } } } */
++/* { dg-options "-O2 -mbmi2" } */
++
++static inline unsigned int rotl (unsigned int x, int k)
++{
++  return (x << k) | (x >> (32 - k));
++}
++
++unsigned long long test (unsigned int z)
++{
++  return rotl (z, 55);
++}
+Index: gcc/testsuite/gcc.target/i386/pr81300.c
+===================================================================
+--- a/src/gcc/testsuite/gcc.target/i386/pr81300.c	(.../tags/gcc_6_4_0_release)
++++ b/src/gcc/testsuite/gcc.target/i386/pr81300.c	(.../branches/gcc-6-branch)
+@@ -0,0 +1,30 @@
++/* PR target/81300 */
++/* { dg-do run { target { ! ia32 } } } */
++/* { dg-options "-O2" } */
++
++int
++__attribute__((noinline, noclone))
++foo (void)
++{
++  unsigned long long _discard = 0, zero = 0, maxull = 0;
++  unsigned char zero1 = __builtin_ia32_addcarryx_u64 (0, 0, 0, &_discard);
++  unsigned char zero2 = __builtin_ia32_addcarryx_u64 (zero1, 0, 0, &zero);
++  __builtin_ia32_sbb_u64 (0x0, 2, -1, &_discard);
++  unsigned char one = __builtin_ia32_sbb_u64 (0, zero, 1, &maxull);
++  unsigned long long x = __builtin_ia32_sbb_u64 (one, zero2, 0, &_discard);
++
++  unsigned long long z1 = 0;
++  __asm__ ("mov{q}\t{%1, %0|%0, %1}" : "+r" (z1) : "r" (x));
++  unsigned long long z2 = 3;
++  __asm__ ("mov{q}\t{%1, %0|%0, %1}" : "+r" (z2) : "r" (x));
++
++  return 1 - (z1 | z2);
++}
++
++int main ()
++{
++  if (foo ())
++    __builtin_abort ();
++
++  return 0;
++}
+Index: gcc/testsuite/gcc.target/i386/pr81375.c
+===================================================================
+--- a/src/gcc/testsuite/gcc.target/i386/pr81375.c	(.../tags/gcc_6_4_0_release)
++++ b/src/gcc/testsuite/gcc.target/i386/pr81375.c	(.../branches/gcc-6-branch)
+@@ -0,0 +1,8 @@
++/* PR target/81375 */
++/* { dg-do compile { target ia32 } } */
++/* { dg-options "-mno-80387 -mno-sse -mfpmath=sse" } */
++
++float foo (float a, float b)
++{
++  return a / b;
++}
+Index: gcc/testsuite/gcc.dg/pr81192.c
+===================================================================
+--- a/src/gcc/testsuite/gcc.dg/pr81192.c	(.../tags/gcc_6_4_0_release)
++++ b/src/gcc/testsuite/gcc.dg/pr81192.c	(.../branches/gcc-6-branch)
+@@ -0,0 +1,22 @@
++/* { dg-options "-Os -fdump-tree-pre-details" } */
++
++unsigned a;
++int b, c;
++
++static int
++fn1 (int p1, int p2)
++{
++  return p1 > 2147483647 - p2 ? p1 : p1 + p2;
++}
++
++void
++fn2 (void)
++{
++  int j;
++  a = 30;
++  for (; a;)
++    for (; c; b = fn1 (j, 1))
++      ;
++}
++
++/* { dg-final { scan-tree-dump-times "(?n)find_duplicates: <bb .*> duplicate of <bb .*>" 1 "pre" } } */
+Index: gcc/testsuite/gcc.dg/loop-8.c
+===================================================================
+--- a/src/gcc/testsuite/gcc.dg/loop-8.c	(.../tags/gcc_6_4_0_release)
++++ b/src/gcc/testsuite/gcc.dg/loop-8.c	(.../branches/gcc-6-branch)
+@@ -1,6 +1,6 @@
+ /* { dg-do compile } */
+ /* { dg-options "-O1 -fdump-rtl-loop2_invariant" } */
+-/* { dg-skip-if "unexpected IV" { "hppa*-*-* visium-*-*" } { "*" } { "" } } */
++/* { dg-skip-if "unexpected IV" { "hppa*-*-* visium-*-* powerpc*-*-*" } { "*" } { "" } } */
+ 
+ void
+ f (int *a, int *b)
+Index: gcc/testsuite/ChangeLog
+===================================================================
+--- a/src/gcc/testsuite/ChangeLog	(.../tags/gcc_6_4_0_release)
++++ b/src/gcc/testsuite/ChangeLog	(.../branches/gcc-6-branch)
+@@ -1,3 +1,64 @@
++2017-07-18  Uros Bizjak  <ubizjak@gmail.com>
++
++	PR target/81471
++	* gcc.target/i386/pr81471.c: New test.
++
++2017-07-14  Kelvin Nilsen  <kelvin@gcc.gnu.org>
++
++	Backports from trunk:
++
++	2017-01-23  Kelvin Nilsen  <kelvin@gcc.gnu.org>
++	PR target/66669
++	* gcc.dg/loop-8.c: Modify dg-skip-if directive to exclude this
++	test on powerpc targets.
++
++	2017-02-08  Kelvin Nilsen  <kelvin@gcc.gnu.org>
++	PR target/68972
++	* g++.dg/cpp1y/vla-initlist1.C: Add dg-skip-if directive to
++	disable this test on power architecture.
++
++	2017-03-23  Kelvin Nilsen  <kelvin@gcc.gnu.org>
++	* gcc.target/powerpc/p9-options-1.c: New test.
++
++	2017-03-27  Kelvin Nilsen  <kelvin@gcc.gnu.org>
++	PR target/80103
++	* gcc.target/powerpc/pr80103-1.c: New test.
++
++	2017-05-08  Kelvin Nilsen  <kelvin@gcc.gnu.org>
++	PR target/80101
++	* gcc.target/powerpc/pr80101-1.c: New test.
++
++	2017-07-05  Kelvin Nilsen  <kelvin@gcc.gnu.org>
++	PR target/80103
++	* gcc.target/powerpc/pr80103-1.c (b): Correct spelling of
++	__attribute__.
++
++2017-07-14  Uros Bizjak  <ubizjak@gmail.com>
++
++	Backport from mainline
++	2017-07-10  Uros Bizjak  <ubizjak@gmail.com>
++
++	PR target/81375
++	* gcc.target/i386/pr81375.c: New test.
++
++	Backport from mainline
++	2017-07-04  Uros Bizjak  <ubizjak@gmail.com>
++
++	PR target/81300
++	* gcc.target/i386/pr81300.c: New test.
++
++2017-07-13  Tom de Vries  <tom@codesourcery.com>
++
++	backport from mainline:
++	PR tree-optimization/81192
++	2017-07-03  Tom de Vries  <tom@codesourcery.com>
++
++	* gcc.dg/pr81192.c: New test.
++
++2017-07-06  Andrew Pinski  <apinski@cavium.com>
++
++	* gcc.target/aarch64/pr71112.c : New Testcase.
++
+ 2017-07-04  Release Manager
+ 
+ 	* GCC 6.4.0 released.
+Index: gcc/testsuite/g++.dg/cpp1y/vla-initlist1.C
+===================================================================
+--- a/src/gcc/testsuite/g++.dg/cpp1y/vla-initlist1.C	(.../tags/gcc_6_4_0_release)
++++ b/src/gcc/testsuite/g++.dg/cpp1y/vla-initlist1.C	(.../branches/gcc-6-branch)
+@@ -1,4 +1,5 @@
+ // { dg-do run { target c++11 } }
++// { dg-skip-if "power overwrites two slots of array i" { "power*-*-*" } }
+ // { dg-options "-Wno-vla" }
+ 
+ #include <initializer_list>
+Index: gcc/config/i386/i386.md
+===================================================================
+--- a/src/gcc/config/i386/i386.md	(.../tags/gcc_6_4_0_release)
++++ b/src/gcc/config/i386/i386.md	(.../branches/gcc-6-branch)
+@@ -5393,7 +5393,7 @@
+ (define_expand "floatunsdisf2"
+   [(use (match_operand:SF 0 "register_operand"))
+    (use (match_operand:DI 1 "nonimmediate_operand"))]
+-  "TARGET_64BIT && TARGET_SSE_MATH"
++  "TARGET_64BIT && TARGET_SSE && TARGET_SSE_MATH"
+   "x86_emit_floatuns (operands); DONE;")
+ 
+ (define_expand "floatunsdidf2"
+@@ -7415,21 +7415,15 @@
+ 		(match_operand:XF 2 "register_operand")))]
+   "TARGET_80387")
+ 
+-(define_expand "divdf3"
+-  [(set (match_operand:DF 0 "register_operand")
+- 	(div:DF (match_operand:DF 1 "register_operand")
+- 		(match_operand:DF 2 "nonimmediate_operand")))]
+-   "(TARGET_80387 && X87_ENABLE_ARITH (DFmode))
+-    || (TARGET_SSE2 && TARGET_SSE_MATH)")
+-
+-(define_expand "divsf3"
+-  [(set (match_operand:SF 0 "register_operand")
+-	(div:SF (match_operand:SF 1 "register_operand")
+-		(match_operand:SF 2 "nonimmediate_operand")))]
+-  "(TARGET_80387 && X87_ENABLE_ARITH (SFmode))
+-    || TARGET_SSE_MATH"
++(define_expand "div<mode>3"
++  [(set (match_operand:MODEF 0 "register_operand")
++	(div:MODEF (match_operand:MODEF 1 "register_operand")
++		   (match_operand:MODEF 2 "nonimmediate_operand")))]
++  "(TARGET_80387 && X87_ENABLE_ARITH (<MODE>mode))
++    || (SSE_FLOAT_MODE_P (<MODE>mode) && TARGET_SSE_MATH)"
+ {
+-  if (TARGET_SSE_MATH
++  if (<MODE>mode == SFmode
++      && TARGET_SSE && TARGET_SSE_MATH
+       && TARGET_RECIP_DIV
+       && optimize_insn_for_speed_p ()
+       && flag_finite_math_only && !flag_trapping_math
+@@ -10863,10 +10857,15 @@
+   split_double_mode (<DWI>mode, &operands[0], 1, &operands[4], &operands[5]);
+ })
+ 
++(define_mode_attr rorx_immediate_operand
++	[(SI "const_0_to_31_operand")
++	 (DI "const_0_to_63_operand")])
++
+ (define_insn "*bmi2_rorx<mode>3_1"
+   [(set (match_operand:SWI48 0 "register_operand" "=r")
+-	(rotatert:SWI48 (match_operand:SWI48 1 "nonimmediate_operand" "rm")
+-			(match_operand:QI 2 "immediate_operand" "<S>")))]
++	(rotatert:SWI48
++	  (match_operand:SWI48 1 "nonimmediate_operand" "rm")
++	  (match_operand:QI 2 "<rorx_immediate_operand>" "<S>")))]
+   "TARGET_BMI2"
+   "rorx\t{%2, %1, %0|%0, %1, %2}"
+   [(set_attr "type" "rotatex")
+@@ -10909,7 +10908,7 @@
+ (define_split
+   [(set (match_operand:SWI48 0 "register_operand")
+ 	(rotate:SWI48 (match_operand:SWI48 1 "nonimmediate_operand")
+-		      (match_operand:QI 2 "immediate_operand")))
++		      (match_operand:QI 2 "const_int_operand")))
+    (clobber (reg:CC FLAGS_REG))]
+   "TARGET_BMI2 && reload_completed"
+   [(set (match_dup 0)
+@@ -10923,7 +10922,7 @@
+ (define_split
+   [(set (match_operand:SWI48 0 "register_operand")
+ 	(rotatert:SWI48 (match_operand:SWI48 1 "nonimmediate_operand")
+-			(match_operand:QI 2 "immediate_operand")))
++			(match_operand:QI 2 "const_int_operand")))
+    (clobber (reg:CC FLAGS_REG))]
+   "TARGET_BMI2 && reload_completed"
+   [(set (match_dup 0)
+@@ -10933,7 +10932,7 @@
+   [(set (match_operand:DI 0 "register_operand" "=r")
+ 	(zero_extend:DI
+ 	  (rotatert:SI (match_operand:SI 1 "nonimmediate_operand" "rm")
+-		       (match_operand:QI 2 "immediate_operand" "I"))))]
++		       (match_operand:QI 2 "const_0_to_31_operand" "I"))))]
+   "TARGET_64BIT && TARGET_BMI2"
+   "rorx\t{%2, %1, %k0|%k0, %1, %2}"
+   [(set_attr "type" "rotatex")
+@@ -10977,7 +10976,7 @@
+   [(set (match_operand:DI 0 "register_operand")
+ 	(zero_extend:DI
+ 	  (rotate:SI (match_operand:SI 1 "nonimmediate_operand")
+-		     (match_operand:QI 2 "immediate_operand"))))
++		     (match_operand:QI 2 "const_int_operand"))))
+    (clobber (reg:CC FLAGS_REG))]
+   "TARGET_64BIT && TARGET_BMI2 && reload_completed"
+   [(set (match_dup 0)
+@@ -10992,7 +10991,7 @@
+   [(set (match_operand:DI 0 "register_operand")
+ 	(zero_extend:DI
+ 	  (rotatert:SI (match_operand:SI 1 "nonimmediate_operand")
+-		       (match_operand:QI 2 "immediate_operand"))))
++		       (match_operand:QI 2 "const_int_operand"))))
+    (clobber (reg:CC FLAGS_REG))]
+   "TARGET_64BIT && TARGET_BMI2 && reload_completed"
+   [(set (match_dup 0)
+@@ -11879,7 +11878,8 @@
+ 	(zero_extend (match_dup 1)))]
+   "(peep2_reg_dead_p (3, operands[1])
+     || operands_match_p (operands[1], operands[3]))
+-   && ! reg_overlap_mentioned_p (operands[3], operands[0])"
++   && ! reg_overlap_mentioned_p (operands[3], operands[0])
++   && peep2_regno_dead_p (0, FLAGS_REG)"
+   [(set (match_dup 4) (match_dup 0))
+    (set (strict_low_part (match_dup 5))
+ 	(match_dup 2))]
+@@ -11900,7 +11900,8 @@
+   "(peep2_reg_dead_p (3, operands[1])
+     || operands_match_p (operands[1], operands[3]))
+    && ! reg_overlap_mentioned_p (operands[3], operands[0])
+-   && ! reg_set_p (operands[3], operands[4])"
++   && ! reg_set_p (operands[3], operands[4])
++   && peep2_regno_dead_p (0, FLAGS_REG)"
+   [(parallel [(set (match_dup 5) (match_dup 0))
+ 	      (match_dup 4)])
+    (set (strict_low_part (match_dup 6))
+@@ -11922,7 +11923,8 @@
+ 		   (and:SI (match_dup 3) (const_int 255)))
+ 	      (clobber (reg:CC FLAGS_REG))])]
+   "REGNO (operands[1]) == REGNO (operands[3])
+-   && ! reg_overlap_mentioned_p (operands[3], operands[0])"
++   && ! reg_overlap_mentioned_p (operands[3], operands[0])
++   && peep2_regno_dead_p (0, FLAGS_REG)"
+   [(set (match_dup 4) (match_dup 0))
+    (set (strict_low_part (match_dup 5))
+ 	(match_dup 2))]
+@@ -11944,7 +11946,8 @@
+   "(peep2_reg_dead_p (3, operands[1])
+     || operands_match_p (operands[1], operands[3]))
+    && ! reg_overlap_mentioned_p (operands[3], operands[0])
+-   && ! reg_set_p (operands[3], operands[4])"
++   && ! reg_set_p (operands[3], operands[4])
++   && peep2_regno_dead_p (0, FLAGS_REG)"
+   [(parallel [(set (match_dup 5) (match_dup 0))
+ 	      (match_dup 4)])
+    (set (strict_low_part (match_dup 6))
+@@ -14223,7 +14226,7 @@
+   [(set (match_operand:SF 0 "register_operand" "=x")
+ 	(unspec:SF [(match_operand:SF 1 "nonimmediate_operand" "xm")]
+ 		   UNSPEC_RCP))]
+-  "TARGET_SSE_MATH"
++  "TARGET_SSE && TARGET_SSE_MATH"
+   "%vrcpss\t{%1, %d0|%d0, %1}"
+   [(set_attr "type" "sse")
+    (set_attr "atom_sse_attr" "rcp")
+@@ -14548,7 +14551,7 @@
+   [(set (match_operand:SF 0 "register_operand" "=x")
+ 	(unspec:SF [(match_operand:SF 1 "nonimmediate_operand" "xm")]
+ 		   UNSPEC_RSQRT))]
+-  "TARGET_SSE_MATH"
++  "TARGET_SSE && TARGET_SSE_MATH"
+   "%vrsqrtss\t{%1, %d0|%d0, %1}"
+   [(set_attr "type" "sse")
+    (set_attr "atom_sse_attr" "rcp")
+@@ -14560,7 +14563,7 @@
+   [(set (match_operand:SF 0 "register_operand")
+ 	(unspec:SF [(match_operand:SF 1 "nonimmediate_operand")]
+ 		   UNSPEC_RSQRT))]
+-  "TARGET_SSE_MATH"
++  "TARGET_SSE && TARGET_SSE_MATH"
+ {
+   ix86_emit_swsqrtsf (operands[0], operands[1], SFmode, 1);
+   DONE;
+@@ -14589,7 +14592,7 @@
+    || (SSE_FLOAT_MODE_P (<MODE>mode) && TARGET_SSE_MATH)"
+ {
+   if (<MODE>mode == SFmode
+-      && TARGET_SSE_MATH
++      && TARGET_SSE && TARGET_SSE_MATH
+       && TARGET_RECIP_SQRT
+       && !optimize_function_for_size_p (cfun)
+       && flag_finite_math_only && !flag_trapping_math
+Index: gcc/config/avr/avr.c
+===================================================================
+--- a/src/gcc/config/avr/avr.c	(.../tags/gcc_6_4_0_release)
++++ b/src/gcc/config/avr/avr.c	(.../branches/gcc-6-branch)
+@@ -9864,6 +9864,33 @@
+ }
+ 
+ 
++/* Cost for mul highpart.  X is a LSHIFTRT, i.e. the outer TRUNCATE is
++   already stripped off.  */
++
++static int
++avr_mul_highpart_cost (rtx x, int)
++{
++  if (AVR_HAVE_MUL
++      && LSHIFTRT == GET_CODE (x)
++      && MULT == GET_CODE (XEXP (x, 0))
++      && CONST_INT_P (XEXP (x, 1)))
++    {
++      // This is the wider mode.
++      machine_mode mode = GET_MODE (x);
++  
++      // The middle-end might still have PR81444, i.e. it is calling the cost
++      // functions with strange modes.  Fix this now by also considering
++      // PSImode (should actually be SImode instead).
++      if (HImode == mode || PSImode == mode || SImode == mode)
++        {
++          return COSTS_N_INSNS (2);
++        }
++    }
++
++  return 10000;
++}
++
++
+ /* Mutually recursive subroutine of avr_rtx_cost for calculating the
+    cost of an RTX operand given its context.  X is the rtx of the
+    operand, MODE is its mode, and OUTER is the rtx_code of this
+@@ -9903,7 +9930,7 @@
+    In either case, *TOTAL contains the cost result.  */
+ 
+ static bool
+-avr_rtx_costs_1 (rtx x, machine_mode mode, int outer_code ATTRIBUTE_UNUSED,
++avr_rtx_costs_1 (rtx x, machine_mode mode, int outer_code,
+                  int opno ATTRIBUTE_UNUSED, int *total, bool speed)
+ {
+   enum rtx_code code = GET_CODE (x);
+@@ -10544,6 +10571,12 @@
+       return true;
+ 
+     case LSHIFTRT:
++      if (outer_code == TRUNCATE)
++        {
++          *total = avr_mul_highpart_cost (x, speed);
++          return true;
++        }
++
+       switch (mode)
+ 	{
+ 	case QImode:
+@@ -10721,16 +10754,10 @@
+       return true;
+ 
+     case TRUNCATE:
+-      if (AVR_HAVE_MUL
+-          && LSHIFTRT == GET_CODE (XEXP (x, 0))
+-          && MULT == GET_CODE (XEXP (XEXP (x, 0), 0))
+-          && CONST_INT_P (XEXP (XEXP (x, 0), 1)))
++      if (LSHIFTRT == GET_CODE (XEXP (x, 0)))
+         {
+-          if (QImode == mode || HImode == mode)
+-            {
+-              *total = COSTS_N_INSNS (2);
+-              return true;
+-            }
++          *total = avr_mul_highpart_cost (XEXP (x, 0), speed);
++          return true;
+         }
+       break;
+ 
+Index: gcc/config/aarch64/aarch64.c
+===================================================================
+--- a/src/gcc/config/aarch64/aarch64.c	(.../tags/gcc_6_4_0_release)
++++ b/src/gcc/config/aarch64/aarch64.c	(.../branches/gcc-6-branch)
+@@ -1110,7 +1110,7 @@
+ 	    emit_move_insn (gp_rtx, gen_rtx_HIGH (Pmode, s));
+ 
+ 	    if (mode != GET_MODE (gp_rtx))
+-	      gp_rtx = simplify_gen_subreg (mode, gp_rtx, GET_MODE (gp_rtx), 0);
++             gp_rtx = gen_lowpart (mode, gp_rtx);
+ 	  }
+ 
+ 	if (mode == ptr_mode)
+Index: gcc/config/rs6000/power6.md
+===================================================================
+--- a/src/gcc/config/rs6000/power6.md	(.../tags/gcc_6_4_0_release)
++++ b/src/gcc/config/rs6000/power6.md	(.../branches/gcc-6-branch)
+@@ -108,7 +108,7 @@
+                   power6-store-update-indexed,\
+                   power6-fpstore,\
+                   power6-fpstore-update"
+-  "store_data_bypass_p")
++  "rs6000_store_data_bypass_p")
+ 
+ (define_insn_reservation "power6-load-ext" 4 ; fx
+   (and (eq_attr "type" "load")
+@@ -128,7 +128,7 @@
+                   power6-store-update-indexed,\
+                   power6-fpstore,\
+                   power6-fpstore-update"
+-  "store_data_bypass_p")
++  "rs6000_store_data_bypass_p")
+ 
+ (define_insn_reservation "power6-load-update" 2 ; fx
+   (and (eq_attr "type" "load")
+@@ -276,7 +276,7 @@
+                   power6-store-update-indexed,\
+                   power6-fpstore,\
+                   power6-fpstore-update"
+-  "store_data_bypass_p")
++  "rs6000_store_data_bypass_p")
+ 
+ (define_insn_reservation "power6-cntlz" 2
+   (and (eq_attr "type" "cntlz")
+@@ -289,7 +289,7 @@
+                   power6-store-update-indexed,\
+                   power6-fpstore,\
+                   power6-fpstore-update"
+-  "store_data_bypass_p")
++  "rs6000_store_data_bypass_p")
+ 
+ (define_insn_reservation "power6-var-rotate" 4
+   (and (eq_attr "type" "shift")
+@@ -355,7 +355,7 @@
+                   power6-store-update-indexed,\
+                   power6-fpstore,\
+                   power6-fpstore-update"
+-  "store_data_bypass_p")
++  "rs6000_store_data_bypass_p")
+ 
+ (define_insn_reservation "power6-delayed-compare" 2 ; N/A
+   (and (eq_attr "type" "shift")
+@@ -420,7 +420,7 @@
+                   power6-store-update-indexed,\
+                   power6-fpstore,\
+                   power6-fpstore-update"
+-  "store_data_bypass_p")
++  "rs6000_store_data_bypass_p")
+ 
+ (define_insn_reservation "power6-idiv" 44
+   (and (eq_attr "type" "div")
+@@ -436,7 +436,7 @@
+ ;                  power6-store-update-indexed,\
+ ;                  power6-fpstore,\
+ ;                  power6-fpstore-update"
+-;  "store_data_bypass_p")
++;  "rs6000_store_data_bypass_p")
+ 
+ (define_insn_reservation "power6-ldiv" 56
+   (and (eq_attr "type" "div")
+@@ -452,7 +452,7 @@
+ ;                  power6-store-update-indexed,\
+ ;                  power6-fpstore,\
+ ;                  power6-fpstore-update"
+-;  "store_data_bypass_p")
++;  "rs6000_store_data_bypass_p")
+ 
+ (define_insn_reservation "power6-mtjmpr" 2
+   (and (eq_attr "type" "mtjmpr,mfjmpr")
+@@ -510,7 +510,7 @@
+ 
+ (define_bypass 1 "power6-fp"
+                  "power6-fpstore,power6-fpstore-update"
+-  "store_data_bypass_p")
++  "rs6000_store_data_bypass_p")
+ 
+ (define_insn_reservation "power6-fpcompare" 8
+   (and (eq_attr "type" "fpcompare")
+Index: gcc/config/rs6000/rs6000-protos.h
+===================================================================
+--- a/src/gcc/config/rs6000/rs6000-protos.h	(.../tags/gcc_6_4_0_release)
++++ b/src/gcc/config/rs6000/rs6000-protos.h	(.../branches/gcc-6-branch)
+@@ -216,6 +216,7 @@
+ extern void rs6000_aix_asm_output_dwarf_table_ref (char *);
+ extern void get_ppc476_thunk_name (char name[32]);
+ extern bool rs6000_overloaded_builtin_p (enum rs6000_builtins);
++extern int rs6000_store_data_bypass_p (rtx_insn *, rtx_insn *);
+ extern HOST_WIDE_INT rs6000_builtin_mask_calculate (void);
+ extern void rs6000_asm_output_dwarf_pcrel (FILE *file, int size,
+ 					   const char *label);
+Index: gcc/config/rs6000/rs6000-c.c
+===================================================================
+--- a/src/gcc/config/rs6000/rs6000-c.c	(.../tags/gcc_6_4_0_release)
++++ b/src/gcc/config/rs6000/rs6000-c.c	(.../branches/gcc-6-branch)
+@@ -428,6 +428,9 @@
+     builtin_define ("__FLOAT128__");
+   if (TARGET_FLOAT128_HW)
+     builtin_define ("__FLOAT128_HARDWARE__");
++#ifdef TARGET_LIBC_PROVIDES_HWCAP_IN_TCB
++  builtin_define ("__BUILTIN_CPU_SUPPORTS__");
++#endif
+ 
+   if (TARGET_EXTRA_BUILTINS && cpp_get_options (pfile)->lang != CLK_ASM)
+     {
+Index: gcc/config/rs6000/rs6000.c
+===================================================================
+--- a/src/gcc/config/rs6000/rs6000.c	(.../tags/gcc_6_4_0_release)
++++ b/src/gcc/config/rs6000/rs6000.c	(.../branches/gcc-6-branch)
+@@ -494,6 +494,91 @@
+ 	  != 0);
+ }
+ 
++/* Given that there exists at least one variable that is set (produced)
++   by OUT_INSN and read (consumed) by IN_INSN, return true iff
++   IN_INSN represents one or more memory store operations and none of
++   the variables set by OUT_INSN is used by IN_INSN as the address of a
++   store operation.  If either IN_INSN or OUT_INSN does not represent
++   a "single" RTL SET expression (as loosely defined by the
++   implementation of the single_set function) or a PARALLEL with only
++   SETs, CLOBBERs, and USEs inside, this function returns false.
++
++   This rs6000-specific version of store_data_bypass_p checks for
++   certain conditions that result in assertion failures (and internal
++   compiler errors) in the generic store_data_bypass_p function and
++   returns false rather than calling store_data_bypass_p if one of the
++   problematic conditions is detected.  */
++
++int
++rs6000_store_data_bypass_p (rtx_insn *out_insn, rtx_insn *in_insn)
++{
++  rtx out_set, in_set;
++  rtx out_pat, in_pat;
++  rtx out_exp, in_exp;
++  int i, j;
++
++  in_set = single_set (in_insn);
++  if (in_set)
++    {
++      if (MEM_P (SET_DEST (in_set)))
++	{
++	  out_set = single_set (out_insn);
++	  if (!out_set)
++	    {
++	      out_pat = PATTERN (out_insn);
++	      if (GET_CODE (out_pat) == PARALLEL)
++		{
++		  for (i = 0; i < XVECLEN (out_pat, 0); i++)
++		    {
++		      out_exp = XVECEXP (out_pat, 0, i);
++		      if ((GET_CODE (out_exp) == CLOBBER)
++			  || (GET_CODE (out_exp) == USE))
++			continue;
++		      else if (GET_CODE (out_exp) != SET)
++			return false;
++		    }
++		}
++	    }
++	}
++    }
++  else
++    {
++      in_pat = PATTERN (in_insn);
++      if (GET_CODE (in_pat) != PARALLEL)
++	return false;
++
++      for (i = 0; i < XVECLEN (in_pat, 0); i++)
++	{
++	  in_exp = XVECEXP (in_pat, 0, i);
++	  if ((GET_CODE (in_exp) == CLOBBER) || (GET_CODE (in_exp) == USE))
++	    continue;
++	  else if (GET_CODE (in_exp) != SET)
++	    return false;
++
++	  if (MEM_P (SET_DEST (in_exp)))
++	    {
++	      out_set = single_set (out_insn);
++	      if (!out_set)
++		{
++		  out_pat = PATTERN (out_insn);
++		  if (GET_CODE (out_pat) != PARALLEL)
++		    return false;
++		  for (j = 0; j < XVECLEN (out_pat, 0); j++)
++		    {
++		      out_exp = XVECEXP (out_pat, 0, j);
++		      if ((GET_CODE (out_exp) == CLOBBER)
++			  || (GET_CODE (out_exp) == USE))
++			continue;
++		      else if (GET_CODE (out_exp) != SET)
++			return false;
++		    }
++		}
++	    }
++	}
++    }
++  return store_data_bypass_p (out_insn, in_insn);
++}
++
+ /* Return true if we have D-form addressing in altivec registers.  */
+ static inline bool
+ mode_supports_vmx_dform (machine_mode mode)
+@@ -4075,9 +4160,22 @@
+ 
+   if (TARGET_P8_VECTOR && !TARGET_VSX)
+     {
+-      if (rs6000_isa_flags_explicit & OPTION_MASK_P8_VECTOR)
++      if ((rs6000_isa_flags_explicit & OPTION_MASK_P8_VECTOR)
++	  && (rs6000_isa_flags_explicit & OPTION_MASK_VSX))
+ 	error ("-mpower8-vector requires -mvsx");
+-      rs6000_isa_flags &= ~OPTION_MASK_P8_VECTOR;
++      else if ((rs6000_isa_flags_explicit & OPTION_MASK_P8_VECTOR) == 0)
++	{
++	  rs6000_isa_flags &= ~OPTION_MASK_P8_VECTOR;
++	  if (rs6000_isa_flags_explicit & OPTION_MASK_VSX)
++	    rs6000_isa_flags_explicit |= OPTION_MASK_P8_VECTOR;
++	}
++      else
++	{
++	  /* OPTION_MASK_P8_VECTOR is explicit, and OPTION_MASK_VSX is
++	     not explicit.  */
++	  rs6000_isa_flags |= OPTION_MASK_VSX;
++	  rs6000_isa_flags_explicit |= OPTION_MASK_VSX;
++	}
+     }
+ 
+   if (TARGET_VSX_TIMODE && !TARGET_VSX)
+@@ -4258,9 +4356,22 @@
+ 	 error messages.  However, if users have managed to select
+ 	 power9-vector without selecting power8-vector, they
+ 	 already know about undocumented flags.  */
+-      if (rs6000_isa_flags_explicit & OPTION_MASK_P8_VECTOR)
++      if ((rs6000_isa_flags_explicit & OPTION_MASK_P9_VECTOR) &&
++	  (rs6000_isa_flags_explicit & OPTION_MASK_P8_VECTOR))
+ 	error ("-mpower9-vector requires -mpower8-vector");
+-      rs6000_isa_flags &= ~OPTION_MASK_P9_VECTOR;
++      else if ((rs6000_isa_flags_explicit & OPTION_MASK_P9_VECTOR) == 0)
++	{
++	  rs6000_isa_flags &= ~OPTION_MASK_P9_VECTOR;
++	  if (rs6000_isa_flags_explicit & OPTION_MASK_P8_VECTOR)
++	    rs6000_isa_flags_explicit |= OPTION_MASK_P9_VECTOR;
++	}
++      else
++	{
++	  /* OPTION_MASK_P9_VECTOR is explicit and
++	     OPTION_MASK_P8_VECTOR is not explicit.  */
++	  rs6000_isa_flags |= OPTION_MASK_P8_VECTOR;
++	  rs6000_isa_flags_explicit |= OPTION_MASK_P8_VECTOR;
++	}
+     }
+ 
+   /* -mpower9-dform turns on both -mpower9-dform-scalar and
+@@ -4289,12 +4400,54 @@
+ 	 error messages.  However, if users have managed to select
+ 	 power9-dform without selecting power9-vector, they
+ 	 already know about undocumented flags.  */
+-      if (rs6000_isa_flags_explicit & OPTION_MASK_P9_VECTOR)
++      if ((rs6000_isa_flags_explicit & OPTION_MASK_P9_VECTOR)
++	  && (rs6000_isa_flags_explicit & (OPTION_MASK_P9_DFORM_SCALAR
++					   | OPTION_MASK_P9_DFORM_VECTOR)))
+ 	error ("-mpower9-dform requires -mpower9-vector");
+-      rs6000_isa_flags &= ~(OPTION_MASK_P9_DFORM_SCALAR
+-			    | OPTION_MASK_P9_DFORM_VECTOR);
++      else if (rs6000_isa_flags_explicit & OPTION_MASK_P9_VECTOR)
++	{
++	  rs6000_isa_flags &=
++	    ~(OPTION_MASK_P9_DFORM_SCALAR | OPTION_MASK_P9_DFORM_VECTOR);
++	  rs6000_isa_flags_explicit |=
++	    (OPTION_MASK_P9_DFORM_SCALAR | OPTION_MASK_P9_DFORM_VECTOR);
++	}
++      else
++	{
++	  /* We know that OPTION_MASK_P9_VECTOR is not explicit and
++	     OPTION_MASK_P9_DFORM_SCALAR or OPTION_MASK_P9_DORM_VECTOR
++	     may be explicit.  */
++	  rs6000_isa_flags |= OPTION_MASK_P9_VECTOR;
++	  rs6000_isa_flags_explicit |= OPTION_MASK_P9_VECTOR;
++	}
+     }
+ 
++  if ((TARGET_P9_DFORM_SCALAR || TARGET_P9_DFORM_VECTOR)
++      && !TARGET_DIRECT_MOVE)
++    {
++      /* We prefer to not mention undocumented options in
++	 error messages.  However, if users have managed to select
++	 power9-dform without selecting power9-vector, they
++	 already know about undocumented flags.  */
++      if ((rs6000_isa_flags_explicit & OPTION_MASK_DIRECT_MOVE)
++	  && ((rs6000_isa_flags_explicit & OPTION_MASK_P9_DFORM_VECTOR) ||
++	      (rs6000_isa_flags_explicit & OPTION_MASK_P9_DFORM_SCALAR) ||
++	      (TARGET_P9_DFORM_BOTH == 1)))
++	error ("-mpower9-dform, -mpower9-dform-vector, -mpower9-dform-scalar"
++	       " require -mdirect-move");
++      else if ((rs6000_isa_flags_explicit & OPTION_MASK_DIRECT_MOVE) == 0)
++	{
++	  rs6000_isa_flags |= OPTION_MASK_DIRECT_MOVE;
++	  rs6000_isa_flags_explicit |= OPTION_MASK_DIRECT_MOVE;
++	}
++      else
++	{
++	  rs6000_isa_flags &=
++	    ~(OPTION_MASK_P9_DFORM_SCALAR | OPTION_MASK_P9_DFORM_VECTOR);
++	  rs6000_isa_flags_explicit |=
++	    (OPTION_MASK_P9_DFORM_SCALAR | OPTION_MASK_P9_DFORM_VECTOR);
++	}
++    }
++
+   if (TARGET_P9_DFORM_SCALAR && !TARGET_UPPER_REGS_DF)
+     {
+       /* We prefer to not mention undocumented options in
+@@ -14162,6 +14315,8 @@
+       emit_insn (gen_eqsi3 (scratch2, scratch1, const0_rtx));
+       emit_insn (gen_rtx_SET (target, gen_rtx_XOR (SImode, scratch2, const1_rtx)));
+     }
++  else
++    gcc_unreachable ();
+ 
+   /* Record that we have expanded a CPU builtin, so that we can later
+      emit a reference to the special symbol exported by LIBC to ensure we
+@@ -14169,6 +14324,9 @@
+   cpu_builtin_p = true;
+ 
+ #else
++  warning (0, "%s needs GLIBC (2.23 and newer) that exports hardware "
++	   "capability bits", rs6000_builtin_info[(size_t) fcode].name);
++  
+   /* For old LIBCs, always return FALSE.  */
+   emit_move_insn (target, GEN_INT (0));
+ #endif /* TARGET_LIBC_PROVIDES_HWCAP_IN_TCB */
+@@ -30187,7 +30345,7 @@
+                   case TYPE_LOAD:
+                   case TYPE_CNTLZ:
+                     {
+-                      if (! store_data_bypass_p (dep_insn, insn))
++                      if (! rs6000_store_data_bypass_p (dep_insn, insn))
+                         return get_attr_sign_extend (dep_insn)
+                                == SIGN_EXTEND_YES ? 6 : 4;
+                       break;
+@@ -30194,7 +30352,7 @@
+                     }
+                   case TYPE_SHIFT:
+                     {
+-                      if (! store_data_bypass_p (dep_insn, insn))
++                      if (! rs6000_store_data_bypass_p (dep_insn, insn))
+                         return get_attr_var_shift (dep_insn) == VAR_SHIFT_YES ?
+                                6 : 3;
+                       break;
+@@ -30205,7 +30363,7 @@
+                   case TYPE_EXTS:
+                   case TYPE_INSERT:
+                     {
+-                      if (! store_data_bypass_p (dep_insn, insn))
++                      if (! rs6000_store_data_bypass_p (dep_insn, insn))
+                         return 3;
+                       break;
+                     }
+@@ -30214,19 +30372,19 @@
+                   case TYPE_FPSTORE:
+                     {
+                       if (get_attr_update (dep_insn) == UPDATE_YES
+-                          && ! store_data_bypass_p (dep_insn, insn))
++                          && ! rs6000_store_data_bypass_p (dep_insn, insn))
+                         return 3;
+                       break;
+                     }
+                   case TYPE_MUL:
+                     {
+-                      if (! store_data_bypass_p (dep_insn, insn))
++                      if (! rs6000_store_data_bypass_p (dep_insn, insn))
+                         return 17;
+                       break;
+                     }
+                   case TYPE_DIV:
+                     {
+-                      if (! store_data_bypass_p (dep_insn, insn))
++                      if (! rs6000_store_data_bypass_p (dep_insn, insn))
+                         return get_attr_size (dep_insn) == SIZE_32 ? 45 : 57;
+                       break;
+                     }
+Index: libgo/go/syscall/syscall_linux_s390x.go
+===================================================================
+--- a/src/libgo/go/syscall/syscall_linux_s390x.go	(.../tags/gcc_6_4_0_release)
++++ b/src/libgo/go/syscall/syscall_linux_s390x.go	(.../branches/gcc-6-branch)
+@@ -12,10 +12,29 @@
+ 
+ func (r *PtraceRegs) SetPC(pc uint64) { r.Psw.Addr = pc }
+ 
+-func PtraceGetRegs(pid int, regsout *PtraceRegs) (err error) {
+-	return ptrace(PTRACE_GETREGS, pid, 0, uintptr(unsafe.Pointer(regsout)))
++const syscall_PTRACE_PEEKUSR_AREA = 0x5000
++const syscall_PTRACE_POKEUSR_AREA = 0x5001
++
++type syscall_ptrace_area struct {
++	len          uint32
++	kernel_addr  uint64
++	process_addr uint64
+ }
+ 
++func PtraceGetRegs(pid int, regs *PtraceRegs) (err error) {
++	parea := syscall_ptrace_area{
++		24,
++		0,
++		uint64(uintptr(unsafe.Pointer(regs))),
++	}
++	return ptrace(syscall_PTRACE_PEEKUSR_AREA, pid, uintptr(unsafe.Pointer(&parea)), 0)
++}
++
+ func PtraceSetRegs(pid int, regs *PtraceRegs) (err error) {
+-	return ptrace(PTRACE_SETREGS, pid, 0, uintptr(unsafe.Pointer(regs)))
++	parea := syscall_ptrace_area{
++		24,
++		0,
++		uint64(uintptr(unsafe.Pointer(regs))),
++	}
++	return ptrace(syscall_PTRACE_POKEUSR_AREA, pid, uintptr(unsafe.Pointer(&parea)), 0)
+ }
+Index: libgo/go/syscall/syscall_linux_s390.go
+===================================================================
+--- a/src/libgo/go/syscall/syscall_linux_s390.go	(.../tags/gcc_6_4_0_release)
++++ b/src/libgo/go/syscall/syscall_linux_s390.go	(.../branches/gcc-6-branch)
+@@ -12,10 +12,29 @@
+ 
+ func (r *PtraceRegs) SetPC(pc uint64) { r.Psw.Addr = uint32(pc) }
+ 
+-func PtraceGetRegs(pid int, regsout *PtraceRegs) (err error) {
+-	return ptrace(PTRACE_GETREGS, pid, 0, uintptr(unsafe.Pointer(regsout)))
++const syscall_PTRACE_PEEKUSR_AREA = 0x5000
++const syscall_PTRACE_POKEUSR_AREA = 0x5001
++
++type syscall_ptrace_area struct {
++	len          uint32
++	kernel_addr  uint32
++	process_addr uint32
+ }
+ 
++func PtraceGetRegs(pid int, regs *PtraceRegs) (err error) {
++	parea := syscall_ptrace_area{
++		12,
++		0,
++		uint32(uintptr(unsafe.Pointer(regs))),
++	}
++	return ptrace(syscall_PTRACE_PEEKUSR_AREA, pid, uintptr(unsafe.Pointer(&parea)), 0)
++}
++
+ func PtraceSetRegs(pid int, regs *PtraceRegs) (err error) {
+-	return ptrace(PTRACE_SETREGS, pid, 0, uintptr(unsafe.Pointer(regs)))
++	parea := syscall_ptrace_area{
++		12,
++		0,
++		uint32(uintptr(unsafe.Pointer(regs))),
++	}
++	return ptrace(syscall_PTRACE_POKEUSR_AREA, pid, uintptr(unsafe.Pointer(&parea)), 0)
+ }
