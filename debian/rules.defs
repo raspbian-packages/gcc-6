@@ -1301,7 +1301,7 @@ ifeq ($(distribution),Debian)
 		ppc64el s390x sparc sparc64 kfreebsd-amd64 kfreebsd-i386
   endif
   ifeq (,$(filter $(distrelease),wheezy squeeze jessie stretch))
-    pie_archs += powerpc ppc64
+    pie_archs += ppc64
   endif
 else ifeq ($(distribution),Ubuntu)
   ifeq (,$(filter $(distrelease),lucid precise trusty utopic vivid wily))
@@ -1521,7 +1521,7 @@ ifneq (,$(with_rtlibs))
   with_check := disabled for rtlibs stage
 endif
 check_no_cpus := m68k
-check_no_systems := # gnu kfreebsd-gnu
+check_no_systems := gnu kfreebsd-gnu
 ifneq (,$(filter $(DEB_TARGET_ARCH_CPU),$(check_no_cpus)))
   with_check := disabled for cpu $(DEB_TARGET_ARCH_CPU)
 endif

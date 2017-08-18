@@ -51,7 +51,7 @@ Index: b/src/gcc/Makefile.in
 ===================================================================
 --- a/src/gcc/Makefile.in
 +++ b/src/gcc/Makefile.in
-@@ -832,12 +832,10 @@ BASEVER     := $(srcdir)/BASE-VER  # 4.x
+@@ -833,12 +833,10 @@ BASEVER     := $(srcdir)/BASE-VER  # 4.x
  DEVPHASE    := $(srcdir)/DEV-PHASE # experimental, prerelease, ""
  DATESTAMP   := $(srcdir)/DATESTAMP # YYYYMMDD or empty
  REVISION    := $(srcdir)/REVISION  # [BRANCH revision XXXXXX]
@@ -64,7 +64,7 @@ Index: b/src/gcc/Makefile.in
  
  ifeq (,$(wildcard $(REVISION)))
  REVISION_c  :=
-@@ -864,7 +862,6 @@ DATESTAMP_s := \
+@@ -865,7 +863,6 @@ DATESTAMP_s := \
    "\"$(if $(DEVPHASE_c)$(filter-out 0,$(PATCHLEVEL_c)), $(DATESTAMP_c))\""
  PKGVERSION_s:= "\"@PKGVERSION@\""
  BUGURL_s    := "\"@REPORT_BUGS_TO@\""
@@ -72,7 +72,7 @@ Index: b/src/gcc/Makefile.in
  
  PKGVERSION  := @PKGVERSION@
  BUGURL_TEXI := @REPORT_BUGS_TEXI@
-@@ -2704,9 +2701,8 @@ PREPROCESSOR_DEFINES = \
+@@ -2706,9 +2703,8 @@ PREPROCESSOR_DEFINES = \
    -DSTANDARD_EXEC_PREFIX=\"$(libdir)/gcc/\" \
    @TARGET_SYSTEM_ROOT_DEFINE@
  
@@ -88,13 +88,13 @@ Index: b/src/gcc/LINARO-VERSION
 ===================================================================
 --- a/src/gcc/LINARO-VERSION
 +++ /dev/null
-@@ -1,1 +0,0 @@
--Snapshot 6.3-2017.06
+@@ -1 +0,0 @@
+-Snapshot 6.4-2017.07
 Index: b/src/gcc/configure.ac
 ===================================================================
 --- a/src/gcc/configure.ac
 +++ b/src/gcc/configure.ac
-@@ -903,7 +903,7 @@ AC_ARG_WITH(specs,
+@@ -910,7 +910,7 @@ AC_ARG_WITH(specs,
  )
  AC_SUBST(CONFIGURE_SPECS)
  

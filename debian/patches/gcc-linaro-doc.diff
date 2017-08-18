@@ -1,4 +1,4 @@
-# DP: Changes for the Linaro 6-2017.06 snapshot (documentation).
+# DP: Changes for the Linaro 6-2017.07 snapshot (documentation).
 
 --- a/src/gcc/doc/cpp.texi
 +++ b/src/gcc/doc/cpp.texi
@@ -710,6 +710,18 @@
  @item bind_pic_locally
  Add the target-specific flags needed to enable functions to bind
  locally when using pic/PIC passes in the testsuite.
+@@ -2111,6 +2205,11 @@ the codeset to convert to.
+ Skip the test if the target does not support profiling with option
+ @var{profopt}.
+ 
++@item dg-require-stack-check @var{check}
++Skip the test if the target does not support the @code{-fstack-check}
++option.  If @var{check} is @code{""}, support for @code{-fstack-check}
++is checked, for @code{-fstack-check=("@var{check}")} otherwise.
++
+ @item dg-require-visibility @var{vis}
+ Skip the test if the target does not support the @code{visibility} attribute.
+ If @var{vis} is @code{""}, support for @code{visibility("hidden")} is
 --- a/src/gcc/doc/tm.texi
 +++ b/src/gcc/doc/tm.texi
 @@ -7510,6 +7510,18 @@ is non-NULL, it is the @code{VAR_DECL} or @code{FUNCTION_DECL} with which

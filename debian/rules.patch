@@ -147,9 +147,9 @@ ifneq (,$(filter $(derivative),Ubuntu))
     ifeq ($(with_pie),yes)
       hardening_patches += \
 	bind_now_when_pie
-    else
-      hardening_patches += \
-	ignore-pie-specs-when-not-enabled
+#    else
+#      hardening_patches += \
+#	ignore-pie-specs-when-not-enabled
     endif
   endif
 else ifneq (,$(filter $(derivative),Debian))

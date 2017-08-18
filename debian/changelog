@@ -1,6 +1,31 @@
-gcc-6 (6.4.0-1+rpi1) buster-staging; urgency=medium
+gcc-6 (6.4.0-3+rpi1) buster-staging; urgency=medium
 
- -- Raspbian forward porter <root@raspbian.org>  Wed, 19 Jul 2017 21:04:21 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Fri, 18 Aug 2017 14:47:38 +0000
+
+gcc-6 (6.4.0-3) unstable; urgency=medium
+
+  * Update to SVN 20170805 (r250889) from the gcc-6-branch.
+    - Fix PR lto/81487, PR target/81641 (x86), PR sanitizer/81604,
+      PR target/81414 (AArch64), PR tree-optimization/81555,
+      PR tree-optimization/81556, PR target/79883 (AVR), PR target/67353 (AVR),
+      PR target/81305 (AVR), PR target/81407 (AVR), PR lto/81487,
+      PR tree-optimization/81162, PR rtl-optimization/75964,
+      PR target/80569 (x86). 
+  * Don't run the testsuite on the kfreebsd and hurd buildds, hangs.
+
+ -- Matthias Klose <doko@debian.org>  Sat, 05 Aug 2017 10:26:43 -0400
+
+gcc-6 (6.4.0-2) unstable; urgency=medium
+
+  * Update to SVN 20170724 (r250470) from the gcc-6-branch.
+    - Fix PR libstdc++/80316, PR target/80929 (AVR), PR target/80103 (PPC),
+      PR target/80101 (PPC), PR target/81375 (x86), PR target/81300 (x86),
+      PR tree-optimization/81192, PR target/81471 (x86).
+  * Don't configure powerpc with --enable-default-pie, fails to build.
+    See #856224, PR target/81295.
+  * Update the Linaro support to the 6.3-2017.07 snapshot.
+
+ -- Matthias Klose <doko@debian.org>  Mon, 24 Jul 2017 10:37:10 +0200
 
 gcc-6 (6.4.0-1) unstable; urgency=medium
 
