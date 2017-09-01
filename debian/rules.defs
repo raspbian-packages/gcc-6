@@ -1121,6 +1121,9 @@ ifeq ($(with_objc),yes)
   ifneq (,$(findstring $(DEB_TARGET_GNU_SYSTEM),$(libgc_no_systems)))
     with_objc_gc := disabled for system $(DEB_TARGET_GNU_SYSTEM)
   endif
+  ifneq (,$(findstring build-cross, $(build_type)))
+    with_objc_gc := disabled for cross builds
+  endif
 
   # Build all packages needed for Objective-C development
   ifeq ($(with_dev),yes)

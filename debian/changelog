@@ -1,6 +1,16 @@
-gcc-6 (6.4.0-3+rpi1) buster-staging; urgency=medium
+gcc-6 (6.4.0-4+rpi1) buster-staging; urgency=medium
 
- -- Raspbian forward porter <root@raspbian.org>  Fri, 18 Aug 2017 14:47:38 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Fri, 01 Sep 2017 05:31:53 +0000
+
+gcc-6 (6.4.0-4) unstable; urgency=medium
+
+  * Update to SVN 20170820 (r251205) from the gcc-6-branch.
+    - Fix PR target/81894 (x86), PR target/81861 (x86),
+      PR tree-optimization/81354, PR c++/71570.
+  * Don't build the gc enabled libobjc for cross compilers. Closes: #872301.
+  * Fix hangs w/ asan binaries on arm64 (Dann Frazier). LP: #1709727.
+
+ -- Matthias Klose <doko@debian.org>  Sun, 20 Aug 2017 17:23:10 +0200
 
 gcc-6 (6.4.0-3) unstable; urgency=medium
 
@@ -10,7 +20,7 @@ gcc-6 (6.4.0-3) unstable; urgency=medium
       PR tree-optimization/81556, PR target/79883 (AVR), PR target/67353 (AVR),
       PR target/81305 (AVR), PR target/81407 (AVR), PR lto/81487,
       PR tree-optimization/81162, PR rtl-optimization/75964,
-      PR target/80569 (x86). 
+      PR target/80569 (x86).
   * Don't run the testsuite on the kfreebsd and hurd buildds, hangs.
 
  -- Matthias Klose <doko@debian.org>  Sat, 05 Aug 2017 10:26:43 -0400

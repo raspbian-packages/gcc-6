@@ -1,10 +1,10 @@
-# DP: updates from the 6 branch upto 20170805 (r250889).
+# DP: updates from the 6 branch upto 20170820 (r251205).
 
 last_update()
 {
 	cat > ${dir}LAST_UPDATED <EOF
-Sat Aug  5 10:19:47 EDT 2017
-Sat Aug  5 14:19:47 UTC 2017 (revision 250889)
+Sun Aug 20 14:52:26 CEST 2017
+Sun Aug 20 12:52:26 UTC 2017 (revision 251205)
 EOF
 }
 
@@ -1255,12 +1255,37 @@ Index: gcc/DATESTAMP
 +++ b/src/gcc/DATESTAMP	(.../branches/gcc-6-branch)
 @@ -1 +1 @@
 -20170704
-+20170805
++20170820
 Index: gcc/ChangeLog
 ===================================================================
 --- a/src/gcc/ChangeLog	(.../tags/gcc_6_4_0_release)
 +++ b/src/gcc/ChangeLog	(.../branches/gcc-6-branch)
-@@ -1,3 +1,204 @@
+@@ -1,3 +1,229 @@
++2017-08-19  Uros Bizjak  <ubizjak@gmail.com>
++
++	PR target/81894
++	* doc/extend.texi (x86 Built-in Functions): Correct the name of
++	__builtin_ia32_lzcnt_u16.
++
++2017-08-17  Uros Bizjak  <ubizjak@gmail.com>
++
++	Backport from mainline
++	2017-08-17  Maxim Ostapenko  <m.ostapenko@samsung.com>
++
++	PR target/81861
++	* config/i386/i386.c (ix86_option_override_internal): Save target
++	specific options after ix86_stack_protector_guard_reg was changed.
++
++2017-08-16  Bill Schmidt  <wschmidt@linux.vnet.ibm.com>
++
++	Backport from mainline
++	2017-08-08  Bill Schmidt  <wschmidt@linux.vnet.ibm.com>
++
++	PR tree-optimization/81354
++	* gimple-ssa-strength-reduction.c (create_add_on_incoming_edge):
++	Insert on edges rather than explicitly creating landing pads.
++	(analyze_candidates_and_replace): Commit edge inserts.
++
 +2017-08-01  Uros Bizjak  <ubizjak@gmail.com>
 +
 +	PR target/81641
@@ -1465,7 +1490,7 @@ Index: gcc/ChangeLog
  2017-07-04  Release Manager
  
  	* GCC 6.4.0 released.
-@@ -83,7 +288,7 @@
+@@ -83,7 +313,7 @@
  	Backport from mainline
  	2017-05-04  Prakhar Bahuguna  <prakhar.bahuguna@arm.com>
  
@@ -1474,7 +1499,7 @@ Index: gcc/ChangeLog
  	__builtin_arm_ldfscr to __builtin_arm_get_fpscr, and rename
  	__builtin_arm_stfscr to __builtin_arm_set_fpscr.
  
-@@ -417,7 +622,7 @@
+@@ -417,7 +647,7 @@
  
  	PR target/80968
  	* config/sparc/sparc.c (sparc_flat_expand_epilogue): Don't
@@ -2492,7 +2517,20 @@ Index: gcc/testsuite/ChangeLog
 ===================================================================
 --- a/src/gcc/testsuite/ChangeLog	(.../tags/gcc_6_4_0_release)
 +++ b/src/gcc/testsuite/ChangeLog	(.../branches/gcc-6-branch)
-@@ -1,3 +1,128 @@
+@@ -1,3 +1,141 @@
++2017-08-16  Bill Schmidt  <wschmidt@linux.vnet.ibm.com>
++
++	Backport from mainline
++	2017-08-08  Bill Schmidt  <wschmidt@linux.vnet.ibm.com>
++
++	PR tree-optimization/81354
++	* g++.dg/torture/pr81354.C: New file.
++
++2017-08-14  Paolo Carlini  <paolo.carlini@oracle.com>
++
++	PR c++/71570
++	* g++.dg/cpp0x/lambda/lambda-ice17.C: New.
++
 +2017-08-01  Uros Bizjak  <ubizjak@gmail.com>
 +
 +	PR target/81641
@@ -2621,6 +2659,52 @@ Index: gcc/testsuite/ChangeLog
  2017-07-04  Release Manager
  
  	* GCC 6.4.0 released.
+Index: gcc/testsuite/g++.dg/cpp0x/lambda/lambda-ice17.C
+===================================================================
+--- a/src/gcc/testsuite/g++.dg/cpp0x/lambda/lambda-ice17.C	(.../tags/gcc_6_4_0_release)
++++ b/src/gcc/testsuite/g++.dg/cpp0x/lambda/lambda-ice17.C	(.../branches/gcc-6-branch)
+@@ -0,0 +1,12 @@
++// PR c++/71570
++// { dg-do compile { target c++11 } }
++
++void foo (int);
++
++void foo (void)
++{
++  [&foo] // { dg-error "cannot capture" }
++  {
++    foo (0);
++  };
++}
+Index: gcc/testsuite/g++.dg/torture/pr81354.C
+===================================================================
+--- a/src/gcc/testsuite/g++.dg/torture/pr81354.C	(.../tags/gcc_6_4_0_release)
++++ b/src/gcc/testsuite/g++.dg/torture/pr81354.C	(.../branches/gcc-6-branch)
+@@ -0,0 +1,24 @@
++// PR81354 reported this test as crashing in a limited range of revisions.
++// { dg-do compile }
++
++struct T { double a; double b; };
++
++void foo(T Ad[], int As[2])
++{
++  int j;
++  int i;
++  int Bs[2] = {0,0};
++  T Bd[16];
++
++  for (j = 0; j < 4; j++) {
++    for (i = 0; i + 1 <= j + 1; i++) {
++      Ad[i + As[0] * j] = Bd[i + Bs[0] * j];
++    }
++
++    i = j + 1;  // <- comment out this line and it does not crash
++    for (; i + 1 < 5; i++) {
++      Ad[i + As[0] * j].a = 0.0;
++      Ad[i + As[0] * j].b = 0.0;
++    }
++  }
++}
 Index: gcc/testsuite/g++.dg/cpp1y/vla-initlist1.C
 ===================================================================
 --- a/src/gcc/testsuite/g++.dg/cpp1y/vla-initlist1.C	(.../tags/gcc_6_4_0_release)
@@ -2667,6 +2751,36 @@ Index: gcc/testsuite/c-c++-common/ubsan/pr81604.c
 +
 +/* { dg-output "index -1 out of bounds for type 'long int \\\[10\\\]'\[^\n\r]*(\n|\r\n|\r)" } */
 +/* { dg-output "\[^\n\r]*signed integer overflow: \[0-9]+ \\* \[0-9]+ cannot be represented in type 'long int'" } */
+Index: gcc/cp/ChangeLog
+===================================================================
+--- a/src/gcc/cp/ChangeLog	(.../tags/gcc_6_4_0_release)
++++ b/src/gcc/cp/ChangeLog	(.../branches/gcc-6-branch)
+@@ -1,3 +1,9 @@
++2017-08-14  Paolo Carlini  <paolo.carlini@oracle.com>
++
++	PR c++/71570
++	* lambda.c (add_capture): Early return if we cannot capture by
++	reference.
++
+ 2017-07-04  Release Manager
+ 
+ 	* GCC 6.4.0 released.
+Index: gcc/cp/lambda.c
+===================================================================
+--- a/src/gcc/cp/lambda.c	(.../tags/gcc_6_4_0_release)
++++ b/src/gcc/cp/lambda.c	(.../branches/gcc-6-branch)
+@@ -491,7 +491,10 @@
+ 	{
+ 	  type = build_reference_type (type);
+ 	  if (!dependent_type_p (type) && !real_lvalue_p (initializer))
+-	    error ("cannot capture %qE by reference", initializer);
++	    {
++	      error ("cannot capture %qE by reference", initializer);
++	      return error_mark_node;
++	    }
+ 	}
+       else
+ 	{
 Index: gcc/gimple-ssa-strength-reduction.c
 ===================================================================
 --- a/src/gcc/gimple-ssa-strength-reduction.c	(.../tags/gcc_6_4_0_release)
@@ -2688,6 +2802,49 @@ Index: gcc/gimple-ssa-strength-reduction.c
      {
        enum tree_code code = PLUS_EXPR;
        tree bump_tree;
+@@ -2141,8 +2142,6 @@
+ 			     widest_int increment, edge e, location_t loc,
+ 			     bool known_stride)
+ {
+-  basic_block insert_bb;
+-  gimple_stmt_iterator gsi;
+   tree lhs, basis_type;
+   gassign *new_stmt;
+ 
+@@ -2197,19 +2196,13 @@
+ 	gcc_unreachable ();
+     }
+ 
+-  insert_bb = single_succ_p (e->src) ? e->src : split_edge (e);
+-  gsi = gsi_last_bb (insert_bb);
+-
+-  if (!gsi_end_p (gsi) && is_ctrl_stmt (gsi_stmt (gsi)))
+-    gsi_insert_before (&gsi, new_stmt, GSI_NEW_STMT);
+-  else
+-    gsi_insert_after (&gsi, new_stmt, GSI_NEW_STMT);
+-
+   gimple_set_location (new_stmt, loc);
++  gsi_insert_on_edge (e, new_stmt);
+ 
+   if (dump_file && (dump_flags & TDF_DETAILS))
+     {
+-      fprintf (dump_file, "Inserting in block %d: ", insert_bb->index);
++      fprintf (dump_file, "Inserting on edge %d->%d: ", e->src->index,
++	       e->dest->index);
+       print_gimple_stmt (dump_file, new_stmt, 0, 0);
+     }
+ 
+@@ -3577,6 +3570,10 @@
+ 	  free (incr_vec);
+ 	}
+     }
++
++  /* For conditional candidates, we may have uncommitted insertions
++     on edges to clean up.  */
++  gsi_commit_edge_inserts ();
+ }
+ 
+ namespace {
 Index: gcc/simplify-rtx.c
 ===================================================================
 --- a/src/gcc/simplify-rtx.c	(.../tags/gcc_6_4_0_release)
@@ -3089,6 +3246,32 @@ Index: gcc/config/i386/i386.c
    /* Validate -mpreferred-stack-boundary= value or default it to
       PREFERRED_STACK_BOUNDARY_DEFAULT.  */
    ix86_preferred_stack_boundary = PREFERRED_STACK_BOUNDARY_DEFAULT;
+@@ -5552,12 +5558,6 @@
+   gcc_assert ((opts->x_target_flags & MASK_LONG_DOUBLE_64) == 0
+ 	      || (opts->x_target_flags & MASK_LONG_DOUBLE_128) == 0);
+ 
+-  /* Save the initial options in case the user does function specific
+-     options.  */
+-  if (main_args_p)
+-    target_option_default_node = target_option_current_node
+-      = build_target_option_node (opts);
+-
+   /* Handle stack protector */
+   if (!opts_set->x_ix86_stack_protector_guard)
+     opts->x_ix86_stack_protector_guard
+@@ -5577,6 +5577,12 @@
+       ix86_parse_stringop_strategy_string (str, true);
+       free (str);
+     }
++
++  /* Save the initial options in case the user does function specific
++     options.  */
++  if (main_args_p)
++    target_option_default_node = target_option_current_node
++      = build_target_option_node (opts);
+ }
+ 
+ /* Implement the TARGET_OPTION_OVERRIDE hook.  */
 @@ -17521,7 +17527,7 @@
        /* Displacement only requires special attention.  */
        if (CONST_INT_P (disp))
