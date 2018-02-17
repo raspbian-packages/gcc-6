@@ -118,6 +118,7 @@ debian_patches += \
 	pr80533 \
 	sanitizer-Fix-a-crash-in-SizeClassAllocator32-with-a \
 	asan-Enable-48-bit-VMA-support-on-aarch64 \
+	libffi-mipsen-r6 \
 
 #	$(if $(filter yes, $(DEB_CROSS)),,gcc-print-file-name) \
 #	libstdc++-nothumb-check \

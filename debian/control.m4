@@ -56,7 +56,7 @@ Uploaders: Iain Buclaw <ibuclaw@ubuntu.com>, Matthias Klose <doko@debian.org>
 ', `dnl
 Uploaders: Matthias Klose <doko@debian.org>
 ')dnl SRCNAME
-Standards-Version: 4.1.2
+Standards-Version: 4.1.3
 ifdef(`TARGET',`dnl cross
 Build-Depends: DEBHELPER_BUILD_DEP DPKG_BUILD_DEP
   LIBC_BUILD_DEP, LIBC_BIARCH_BUILD_DEP
@@ -3897,6 +3897,8 @@ Depends: BASEDEP, ifdef(`STANDALONEGO',`${dep:libcc1}, ',`gcc`'PV`'TS (= ${gcc:V
 Provides: go-compiler
 Suggests: ${go:multilib}, gccgo`'PV-doc, libdbgdep(go`'GO_SO-dbg,)
 Conflicts: ${golang:Conflicts}
+Breaks: libgo`'GO_SO`'LS (<< 6.4.0-12)
+Replaces: libgo`'GO_SO`'LS (<< 6.4.0-12)
 BUILT_USING`'dnl
 Description: GNU Go compiler
  This is the GNU Go compiler, which compiles Go on platforms supported
@@ -3911,6 +3913,14 @@ Section: devel
 Priority: optional
 Depends: BASEDEP, gccgo`'PV`'TS (= ${gcc:Version}), ifdef(`STANDALONEGO',,`gcc`'PV-multilib`'TS (= ${gcc:Version}), ')${dep:libgobiarch}, ${shlibs:Depends}, ${misc:Depends}
 Suggests: ${dep:libgobiarchdbg}
+Breaks: lib32go`'GO_SO`'LS (<< 6.4.0-12),
+  libn32go`'GO_SO`'LS (<< 6.4.0-12),
+  libx32go`'GO_SO`'LS (<< 6.4.0-12),
+  lib64go`'GO_SO`'LS (<< 6.4.0-12)
+Replaces: lib32go`'GO_SO`'LS (<< 6.4.0-12),
+  libn32go`'GO_SO`'LS (<< 6.4.0-12),
+  libx32go`'GO_SO`'LS (<< 6.4.0-12),
+  lib64go`'GO_SO`'LS (<< 6.4.0-12)
 BUILT_USING`'dnl
 Description: GNU Go compiler (multilib support)`'ifdef(`TARGET)',` (cross compiler for TARGET architecture)', `')
  This is the GNU Go compiler, which compiles Go on platforms supported

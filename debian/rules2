@@ -661,7 +661,7 @@ endif
 ifneq (,$(findstring mips64el-linux-gnuabin32,$(DEB_TARGET_GNU_TYPE)))
   CONFARGS += --with-madd4=no
   ifeq ($(multilib),yes)
-    ifeq ($(biarchn32)-$(biarch32),yes-yes)
+    ifeq ($(biarch64)-$(biarch32),yes-yes)
       CONFARGS += --enable-targets=all
       CONFARGS += --with-arch-64=mips64r2
       CONFARGS += --with-arch-32=mips32r2 --with-fp-32=xx
@@ -671,7 +671,7 @@ endif
 
 ifneq (,$(findstring mips64-linux-gnuabin32,$(DEB_TARGET_GNU_TYPE)))
   ifeq ($(multilib),yes)
-    ifeq ($(biarchn32)-$(biarch32),yes-yes)
+    ifeq ($(biarch64)-$(biarch32),yes-yes)
       CONFARGS += --enable-targets=all
       CONFARGS += --with-arch-64=mips64r2
       CONFARGS += --with-arch-32=mips32r2 --with-fp-32=xx
@@ -726,7 +726,7 @@ endif
 ifneq (,$(findstring mipsisa64r6el-linux-gnuabin32,$(DEB_TARGET_GNU_TYPE)))
   CONFARGS += --with-mips-plt
   ifeq ($(multilib),yes)
-    ifeq ($(biarchn32)-$(biarch32),yes-yes)
+    ifeq ($(biarch64)-$(biarch32),yes-yes)
       CONFARGS += --enable-targets=all
       CONFARGS += --with-arch-64=mips64r6 --with-tune-64=mips64r6
       CONFARGS += --with-arch-32=mips32r6 --with-tune-32=mips32r6
@@ -737,7 +737,7 @@ endif
 ifneq (,$(findstring mipsisa64r6-linux-gnuabin32,$(DEB_TARGET_GNU_TYPE)))
   CONFARGS += --with-mips-plt
   ifeq ($(multilib),yes)
-    ifeq ($(biarchn32)-$(biarch32),yes-yes)
+    ifeq ($(biarch64)-$(biarch32),yes-yes)
       CONFARGS += --enable-targets=all
       CONFARGS += --with-arch-64=mips64r6 --with-tune-64=mips64r6
       CONFARGS += --with-arch-32=mips32r6 --with-tune-32=mips32r6

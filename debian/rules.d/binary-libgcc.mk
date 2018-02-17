@@ -57,6 +57,7 @@ header_files = \
 		    avx512{bw,er,cd,dq,f,ifma,ifmavl,pf,vlbw,vbmi,vldq,vbmivl,vl}intrin.h \
 		    {clflushopt,clwb,clzero,pcommit,xsavec,xsaves}intrin.h \
 		    {arm_acle,unwind-arm-common,s390intrin}.h \
+		    msa.h \
 		    {cross-stdarg,syslimits,unwind,varargs}.h; \
 		do \
 		  test -e $(d)/$(gcc_lib_dir)/include/$$h \

@@ -110,7 +110,7 @@ define __do_gccgo
 	rm -rf $(d_l) $(d_d)
 	dh_installdirs -p$(p_l) $(usr_lib$(2))
 	$(dh_compat2) dh_movefiles -p$(p_l) \
-		$(usr_lib$(2))/libgo.so.* $(usr_lib$(2))/go
+		$(usr_lib$(2))/libgo.so.*
 
 	debian/dh_doclink -p$(p_l) $(p_lbase)
 	debian/dh_doclink -p$(p_d) $(p_lbase)
@@ -167,9 +167,10 @@ define __do_gccgo_libgcc
 endef
 
 define do_go_dev
-	dh_installdirs -p$(2) $(gcc_lib_dir$(1))
+	dh_installdirs -p$(2) $(gcc_lib_dir$(1)) $(usr_lib$(1))
 	$(dh_compat2) dh_movefiles -p$(2) \
-		$(gcc_lib_dir$(1))/{libgobegin,libnetgo}.a
+		$(gcc_lib_dir$(1))/{libgobegin,libnetgo}.a \
+		$(usr_lib$(1))/go
 	$(if $(filter yes, $(with_standalone_go)), \
 	  $(call install_gccgo_lib,libgomp,$(GOMP_SONAME),$(1),$(2)))
 	$(call install_gccgo_lib,libgo,$(GO_SONAME),$(1),$(2))

@@ -1,8 +1,30 @@
-gcc-6 (6.4.0-11+rpi1) buster-staging; urgency=medium
+gcc-6 (6.4.0-12+rpi1) buster-staging; urgency=medium
 
+  [changes brought forward from 6.4.0-11+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Sat, 10 Feb 2018 15:48:42 +0000]
   * Disable testsuite.
 
- -- Peter Michael Green <plugwash@raspbian.org>  Sat, 10 Feb 2018 15:48:42 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Sat, 17 Feb 2018 07:41:34 +0000
+
+gcc-6 (6.4.0-12) unstable; urgency=medium
+
+  * Update to SVN 20180223 (r256971) from the gcc-6-branch.
+    - Fix PR c/81875, PR libstdc++/83834, PR libstdc++/83626,
+      PR libstdc++/83600, PR libstdc++/83598, PR libstdc++/83279,
+      PR libstdc++/79283, PR libstdc++/59568, PR target/81485 (SH),
+      PR target/80870 (SH), PR rtl-optimization/83424, PR target/83677 (PPC),
+      PR target/82975 (ARM), PR target/66488, PR target/80210 (PPC),
+      PR c++/83301, PR c++/78692, PR fortran/83900, PR fortran/83900,
+      PR fortran/80768, PR fortran/83874, PR fortran/78814, PR fortran/82367,
+      PR fortran/83093, PR fortran/82841, PR fortran/83679, PR fortran/83650,
+      PR libgfortran/83649, PR libgfortran/81937.
+  * Move the .gox files into the gccgo packages. Addresses: #883136.
+  * Fix shlibs search path for mips64 cross targets. Addresses: #883988.
+  * libffi: mips/n32.S: disable .set mips4 on mips r6 (YunQiang Su).
+  * debian/rules2: Fix typo for N32 conditions (YunQiang Su).
+    Addresses: #886316.
+  * Install the msa.h header for mips targets (YunQiang Su). Addresses: #887066.
+
+ -- Matthias Klose <doko@debian.org>  Tue, 23 Jan 2018 13:41:09 +0100
 
 gcc-6 (6.4.0-11) unstable; urgency=medium
 
