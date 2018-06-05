@@ -168,7 +168,7 @@ ifeq ($(derivative),Ubuntu)
     endif
   endif
 else
-  ifneq (,$(filter $(distrelease),stretch sid))
+  ifneq (,$(filter $(distrelease),stretch))
     DEB_TARGET_GNU_TYPE := $(subst i586,i686,$(DEB_TARGET_GNU_TYPE))
     i586_symlinks = $(if $(findstring i686,$(DEB_TARGET_GNU_TYPE)),yes)
   endif
@@ -201,6 +201,10 @@ ifneq ($(DEB_BUILD_GNU_TYPE),$(DEB_HOST_GNU_TYPE))
 else
   ifneq ($(DEB_HOST_GNU_TYPE),$(DEB_TARGET_GNU_TYPE))
     # cross compiler, sets WITH_SYSROOT on it's own
+    DEB_CROSS = yes
+    build_type = build-cross
+  else ifeq ($(FORCE_CROSS_LAYOUT),yes)
+    # a native build with a cross layout
     DEB_CROSS = yes
     build_type = build-cross
   else
@@ -859,6 +863,10 @@ with_java := $(call envfilt, java, , c++, $(with_java))
 
 ifeq ($(DEB_STAGE)-$(filter libgcj, $(with_rtlibs)),rtlibs-)
   with_java := disabled for rtlibs stage
+endif
+
+ifeq (,$(filter $(distrelease),squeeze wheezy jessie stretch precise trusty xenial yakkety zesty artful))
+  with_java := disabled for recent distro releases
 endif
 
 ifneq (,$(findstring gccgo, $(PKGSOURCE)))
@@ -1585,7 +1593,7 @@ ifneq (,$(filter $(DEB_HOST_ARCH), hppa mips))
     with_check := disabled for $(DEB_HOST_ARCH), testsuite timeouts with expect
   endif
 endif
-#with_check := disabled for this upload
+with_check := disabled for this upload
 
 # not a dependency on all archs, but if available, use it for the testsuite
 ifneq (,$(wildcard /usr/bin/localedef))

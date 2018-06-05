@@ -201,13 +201,22 @@ LDFLAGS_FOR_TARGET_TO_PASS = \
 
 docdir		= usr/share/doc
 
+binutils_prefix = /usr/bin
+ifneq (,$(with_build_sysroot))
+  #ifneq ($(DEB_HOST_ARCH),$(DEB_TARGET_ARCH))
+    binutils_prefix = $(with_build_sysroot)/usr/bin
+  #endif
+endif
+
 CONFARGS = -v \
 	--with-pkgversion='$(distribution)$(if $(with_linaro_branch),/Linaro)$(if $(with_ibm_branch),/IBM)___$(DEB_VERSION)' \
 	--with-bugurl='file:///usr/share/doc/$(subst gcj,gcc,$(PKGSOURCE))/README.Bugs'
 
 CONFARGS += \
 	--enable-languages=$(subst $(SPACE),$(COMMA),$(enabled_languages)) \
-	--prefix=/$(PF)
+	--prefix=/$(PF) \
+	--with-as=$(binutils_prefix)/$(DEB_TARGET_GNU_TYPE)-as \
+	--with-ld=$(binutils_prefix)/$(DEB_TARGET_GNU_TYPE)-ld
 
 ifeq ($(versioned_packages),yes)
   CONFARGS += --program-suffix=-$(BASE_VERSION)
@@ -226,6 +235,7 @@ ifneq (,$(filter $(DEB_STAGE),stage1 stage2))
 	--disable-libquadmath \
 	--disable-libsanitizer \
 	--disable-threads \
+	--disable-bootstrap \
 	--libexecdir=/$(libexecdir) \
 	--libdir=/$(PF)/$(configured_libdir) \
 	$(if $(with_build_sysroot),--with-build-sysroot=$(with_build_sysroot)) \
@@ -575,9 +585,11 @@ ifneq (,$(filter tilegx,$(DEB_TARGET_GNU_CPU)))
   CONFARGS += --disable-multilib
 endif
 
-ifeq ($(derivative),Ubuntu)
-  ifneq (,$(findstring s390x-linux,$(DEB_TARGET_GNU_TYPE)))
+ifneq (,$(findstring s390x-linux,$(DEB_TARGET_GNU_TYPE)))
+  ifeq ($(derivative),Ubuntu)
     CONFARGS += --with-arch=zEC12
+  else # Debian
+    CONFARGS += --with-arch=z196
   endif
 endif
 
@@ -2463,11 +2475,13 @@ ifneq ($(with_common_libs),yes)
 # apparently this changed with newer dpkg versions (1.18.7?) ...
 	echo 'libgcc_s $(GCC_SONAME) $(p_lgcc)' > debian/shlibs.common
 	echo 'libstdc++ $(CXX_SONAME) $(p_lib)' >> debian/shlibs.common
-	echo 'libquadmath $(QUADMATH_SONAME) libquadmath$(QUADMATH_SONAME)' >> debian/shlibs.common
+	echo 'libquadmath $(QUADMATH_SONAME) libquadmath$(QUADMATH_SONAME)$(cross_lib_arch)' >> debian/shlibs.common
+	echo 'libatomic $(ATOMIC_SONAME) libatomic$(ATOMIC_SONAME)$(cross_lib_arch)' >> debian/shlibs.common
 	$(foreach ml,32 64 n32 x32 hf sf, \
 	  echo 'libgcc_s $(GCC_SONAME) $(subst lib,lib$(ml),$(p_lgcc))' > debian/shlibs.common$(ml); \
 	  echo 'libstdc++ $(CXX_SONAME) $(subst lib,lib$(ml),$(p_lib))' >> debian/shlibs.common$(ml); \
-	  echo 'libquadmath $(QUADMATH_SONAME) lib$(ml)quadmath$(QUADMATH_SONAME)' >> debian/shlibs.common$(ml); \
+	  echo 'libquadmath $(QUADMATH_SONAME) lib$(ml)quadmath$(QUADMATH_SONAME)$(cross_lib_arch)' >> debian/shlibs.common$(ml); \
+	  echo 'libatomic $(ATOMIC_SONAME) lib$(ml)atomic$(ATOMIC_SONAME)$(cross_lib_arch)' >> debian/shlibs.common$(ml); \
 	)
 endif
 

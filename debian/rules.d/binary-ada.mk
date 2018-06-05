@@ -130,6 +130,7 @@ endif
 	$(cross_shlibdeps) dh_shlibdeps -p$(p_lgnat) \
 		$(call shlibdirs_to_search, \
 			$(subst gnat-$(GNAT_SONAME),gcc$(GCC_SONAME),$(p_lgnat)) \
+			$(subst gnat-$(GNAT_SONAME),atomic$(ATOMIC_SONAME),$(p_lgnat)) \
 		,) \
 		$(if $(filter yes, $(with_common_libs)),,-- -Ldebian/shlibs.common$(2))
 	$(call cross_mangle_substvars,$(p_lgnat))
@@ -179,6 +180,7 @@ endif
 	$(cross_shlibdeps) dh_shlibdeps -p$(p_lgnatvsn) \
 		$(call shlibdirs_to_search, \
 			$(subst gnatvsn$(GNAT_SONAME),gcc$(GCC_SONAME),$(p_lgnatvsn)) \
+			$(subst gnatvsn$(GNAT_SONAME),atomic$(ATOMIC_SONAME),$(p_lgnatvsn)) \
 			$(subst gnatvsn$(GNAT_SONAME),gnat-$(GNAT_SONAME),$(p_lgnatvsn)) \
 		,) \
 		$(if $(filter yes, $(with_common_libs)),,-- -Ldebian/shlibs.common$(2))

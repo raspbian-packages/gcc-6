@@ -1,9 +1,95 @@
-gcc-6 (6.4.0-12+rpi1) buster-staging; urgency=medium
+gcc-6 (6.4.0-17+rpi1) buster-staging; urgency=medium
 
   [changes brought forward from 6.4.0-11+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Sat, 10 Feb 2018 15:48:42 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Sat, 17 Feb 2018 07:41:34 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Tue, 05 Jun 2018 02:26:08 +0000
+
+gcc-6 (6.4.0-17) unstable; urgency=medium
+
+  * Update to SVN 20180424 (r259590) from the gcc-6-branch.
+    - Fix PR target/83660 (PPC), PR middle-end/85496, PR target/85261 (ARM),
+      PR target/84574 (x86), PR target/84039 (x86), PR target/84530 (x86),
+      PR target/83839 (x86), PR target/83905 (x86), PR target/82499 (x86),
+      PR target/84748 (AArch64), PR target/85196 (SPARC).
+    - Backport of the retpoline support.
+  * Use triplet-prefixed as and ld (Helmut Grohne). Addresses: #895251.
+  * Link libasan, liblsan, libubsan always with --no-as-needed. LP: #1762683.
+  * Use --push-state --as-needed and --pop-state instead of --as-needed and
+    --no-as-needed for linking libgcc.
+  * Use the binutils in the build chroot if present.
+
+ -- Matthias Klose <doko@debian.org>  Tue, 24 Apr 2018 07:01:10 +0200
+
+gcc-6 (6.4.0-16) unstable; urgency=medium
+
+  * Update to SVN 20180406 (r259166) from the gcc-6-branch.
+    - Fix PR target/85100 (x86), PR target/85193 (x86), PR target/84912 (PPC),
+      PR target/84912 (PPC), PR target/85056 (nvptx), PR target/84826 (ARM),
+      PR target/85026 (ARM), PR target/82411 (PPC), PR target/82989 (ARM),
+      PR target/82518 (ARM), PR tree-optimization/84956, PR c++/78489,
+      PR c++/84489, PR fortran/85084, PR fortran/85001.
+  * Don't install i586 symlinks anymore for i386 builds in sid.
+  * Build a native compiler with a cross directory layout using the
+    FORCE_CROSS_LAYOUT environment variable.
+  * Fix zlib-dev dependencies for the libphobos cross multilib packages.
+  * Fix dependency generation for libatomic and libquadmath cross packages.
+  * Fix some lintian warnings.
+
+ -- Matthias Klose <doko@debian.org>  Fri, 06 Apr 2018 12:51:22 +0200
+
+gcc-6 (6.4.0-15) unstable; urgency=medium
+
+  * Update to SVN 20180321 (r258694) from the gcc-6-branch.
+    - Backport the hppa-linux caller-copies ABI. See #892848.
+    - Fix PR fortran/84931, PR fortran/65453.
+
+ -- Matthias Klose <doko@debian.org>  Wed, 21 Mar 2018 07:29:03 +0800
+
+gcc-6 (6.4.0-14) unstable; urgency=medium
+
+  * Update to SVN 20180319 (r258632) from the gcc-6-branch.
+    - Fix PR target/83451 (PA), PR fortran/83939.
+
+  [ John David Anglin ]
+  * Switch hppa-linux to caller copies ABI (as done in GCC 8). See #892848.
+
+  [ Matthias Klose ]
+  * Stop build gcj in current distro releases. Addresses: #892536.
+
+ -- Matthias Klose <doko@debian.org>  Mon, 19 Mar 2018 01:23:36 +0800
+
+gcc-6 (6.4.0-13) unstable; urgency=medium
+
+  * Update to SVN 20180312 (r258446) from the gcc-6-branch.
+    - S/390: Disable branch prediction.
+    - Fix PR libstdc++/84671, PR libstdc++/81797, PR libstdc++/83833,
+      PR target/PR84295 (S390), PR c/84310, PR target/79747, PR other/80589,
+      PR gcov-profile/84137, PR gcov-profile/83879, PR rtl-optimization/82675,
+      PR c/84229, PR ipa/81360, PR target/83790 (NVPTX), PR target/82096,
+      PR target/84154 (PPC), PR target/83758 (PPC), PR target/84089 (PA),
+      PR bootstrap/84017, PR target/83370 (AArch64), PR tree-optimization/82726,
+      PR tree-optimization/70754, PR bootstrap/80867, PR target/84033 (PPC),
+      PR target/83399 (PPC), PR target/83862 (PPC), PR c++/84686, PR c++/84489,
+      PR c++/71784, PR c++/84441, PR c++/84520, PR c++/84151, PR fortran/56667,
+      PR fortran/71085, PR fortran/78990, PR fortran/83633, PR fortran/30792,
+      PR fortran/84506, PR fortran/84511, PR fortran/84346, PR fortran/68560,
+      PR fortran/35299, PR fortran/54223, PR fortran/84276, PR fortran/82994,
+      PR fortran/82049, PR lto/81440, PR ipa/81360, PR lto/81004,
+      PR lto/83954, PR lto/83954, PR target/83984 (PA), PR debug/77844,
+      PR ipa/82352, PR gcov-profile/82633, PR gcov-profile/82457, PR c++/84785,
+      PR fortran/84734, PR fortran/64124, PR fortran/70409.
+
+  [ Aurelien Jarno ]
+  * Configure s390x build with --with-arch=z196 on Debian.
+
+  [ Matthias Klose ]
+  * Fix cross-building libgnat on armel, when not building the common libraries.
+
+  [ Moritz Muehlenhoff ]
+  * Backport of retpoline support by H.J. Lu.
+
+ -- Matthias Klose <doko@debian.org>  Mon, 12 Mar 2018 16:52:57 +0100
 
 gcc-6 (6.4.0-12) unstable; urgency=medium
 

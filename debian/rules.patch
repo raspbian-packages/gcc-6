@@ -119,11 +119,20 @@ debian_patches += \
 	sanitizer-Fix-a-crash-in-SizeClassAllocator32-with-a \
 	asan-Enable-48-bit-VMA-support-on-aarch64 \
 	libffi-mipsen-r6 \
+	gcc-force-cross-layout \
 
 #	$(if $(filter yes, $(DEB_CROSS)),,gcc-print-file-name) \
 #	libstdc++-nothumb-check \
 # TODO: update ...
 #	libjava-rpath \
+
+ifeq (,$(filter $(distrelease),trusty stretch jessie wheezy))
+  debian_patches += gcc-as-needed-push-pop
+endif
+
+ifeq (,$(filter $(distrelease),lenny squeeze wheezy dapper trusty xenial artful))
+  debian_patches += gcc-hppa-caller-copies-ABI
+endif
 
 hardening_patches =
 ifeq ($(with_ssp)-$(with_ssp_default),yes-yes)
@@ -434,10 +443,6 @@ ifneq (,$(filter svn-updates, $(debian_patches)))
 	  $(patchdir)/svn-updates.diff > src/LAST_UPDATED
 endif
 
-ifneq (,$(filter libgo-elf-relocations-sparc64, $(debian_patches)))
-	uudecode $(patchdir)/../go-relocation-test-gcc620-sparc64.obj.uue
-endif
-
 	: # only needed when we have changes, and currently fails with autogen 5.18
 	: #cd $(srcdir)/fixincludes && ./genfixes
 
@@ -455,11 +460,6 @@ endif
 	mv pxxx $@
 
 unpatch:
-ifneq (,$(filter libgo-elf-relocations-sparc64, $(debian_patches)))
-	# uudecoded in $(patch_stamp) rule
-	rm -f $(srcdir)/libgo/go/debug/elf/testdata/go-relocation-test-gcc620-sparc64.obj
-endif
-
 	QUILT_PATCHES=$(patchdir) \
 	  quilt --quiltrc /dev/null pop -a -R || test $$? = 2
 	rm -rf .pc

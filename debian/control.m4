@@ -56,7 +56,7 @@ Uploaders: Iain Buclaw <ibuclaw@ubuntu.com>, Matthias Klose <doko@debian.org>
 ', `dnl
 Uploaders: Matthias Klose <doko@debian.org>
 ')dnl SRCNAME
-Standards-Version: 4.1.3
+Standards-Version: 4.1.4
 ifdef(`TARGET',`dnl cross
 Build-Depends: DEBHELPER_BUILD_DEP DPKG_BUILD_DEP
   LIBC_BUILD_DEP, LIBC_BIARCH_BUILD_DEP
@@ -5200,7 +5200,7 @@ Architecture: ifdef(`TARGET',`CROSS_ARCH',`biarch64_archs')
 Section: libdevel
 Priority: optional
 Depends: BASELDEP, lib64gphobos`'PHOBOS_V`'LS (>= ${gdc:Version}),
-  libdevdep(gcc`'PV-dev,64), lib64z1-dev, ${shlibs:Depends}, ${misc:Depends}
+  libdevdep(gcc`'PV-dev,64), ifdef(`TARGET',`',`lib64z1-dev,') ${shlibs:Depends}, ${misc:Depends}
 Replaces: lib64phobos`'PV-dev`'LS
 BUILT_USING`'dnl
 Description: Phobos D standard library (64bit development files)
@@ -5235,7 +5235,7 @@ Architecture: ifdef(`TARGET',`CROSS_ARCH',`biarch32_archs')
 Section: libdevel
 Priority: optional
 Depends: BASELDEP, lib32gphobos`'PHOBOS_V`'LS (>= ${gdc:Version}),
-  libdevdep(gcc`'PV-dev,32), lib32z1-dev, ${shlibs:Depends}, ${misc:Depends}
+  libdevdep(gcc`'PV-dev,32), ifdef(`TARGET',`',`lib32z1-dev,') ${shlibs:Depends}, ${misc:Depends}
 Replaces: lib32phobos`'PV-dev`'LS
 BUILT_USING`'dnl
 Description: Phobos D standard library (32bit development files)
@@ -5271,7 +5271,7 @@ Architecture: ifdef(`TARGET',`CROSS_ARCH',`biarchn32_archs')
 Section: libdevel
 Priority: optional
 Depends: BASELDEP, libn32gphobos`'PHOBOS_V`'LS (>= ${gdc:Version}),
-  libdevdep(gcc`'PV-dev,n32), libn32z1-dev, ${shlibs:Depends}, ${misc:Depends}
+  libdevdep(gcc`'PV-dev,n32), ifdef(`TARGET',`',`libn32z1-dev,') ${shlibs:Depends}, ${misc:Depends}
 Replaces: libn32phobos`'PV-dev`'LS
 BUILT_USING`'dnl
 Description: Phobos D standard library (n32 development files)
@@ -5308,7 +5308,7 @@ Architecture: ifdef(`TARGET',`CROSS_ARCH',`biarchx32_archs')
 Section: libdevel
 Priority: optional
 Depends: BASELDEP, libx32gphobos`'PHOBOS_V`'LS (>= ${gdc:Version}),
-  libdevdep(gcc`'PV-dev,x32), ${dep:libx32z}, ${shlibs:Depends}, ${misc:Depends}
+  libdevdep(gcc`'PV-dev,x32), ifdef(`TARGET',`',`${dep:libx32z},') ${shlibs:Depends}, ${misc:Depends}
 Replaces: libx32gphobos`'PV-dev`'LS
 BUILT_USING`'dnl
 Description: Phobos D standard library (x32 development files)

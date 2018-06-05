@@ -162,6 +162,7 @@ endif
 	cp -p debian/README.ssp $(d_gcc)/$(docdir)/$(p_xbase)/
 	cp -p debian/NEWS.gcc $(d_gcc)/$(docdir)/$(p_xbase)/NEWS
 	cp -p debian/NEWS.html $(d_gcc)/$(docdir)/$(p_xbase)/NEWS.html
+	cp -p debian/gcc.css $(d_gcc)/$(docdir)/$(p_xbase)/gcc.css
 	cp -p $(srcdir)/ChangeLog $(d_gcc)/$(docdir)/$(p_xbase)/changelog
 	cp -p $(srcdir)/gcc/ChangeLog \
 		$(d_gcc)/$(docdir)/$(p_xbase)/gcc/changelog

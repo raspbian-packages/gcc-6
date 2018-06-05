@@ -3,7 +3,7 @@ Section: devel
 Priority: optional
 Maintainer: Debian GCC Maintainers <debian-gcc@lists.debian.org>
 Uploaders: Matthias Klose <doko@debian.org>
-Standards-Version: 4.1.3
+Standards-Version: 4.1.4
 Build-Depends: debhelper (>= 9.20141010), dpkg-dev (>= 1.17.14), 
   g++-multilib [amd64 i386 kfreebsd-amd64 mips mips64 mips64el mips64r6 mips64r6el mipsel mipsn32 mipsn32el mipsn32r6 mipsn32r6el mipsr6 mipsr6el powerpc ppc64 s390 s390x sparc sparc64 x32] <!cross>, g++-6 [arm64] <!cross>, 
   libc6.1-dev (>= 2.13-5) [alpha ia64] | libc0.3-dev (>= 2.13-5) [hurd-i386] | libc0.1-dev (>= 2.13-5) [kfreebsd-i386 kfreebsd-amd64] | libc6-dev (>= 2.13-5), libc6-dev (>= 2.13-31) [armel armhf], libc6-dev-amd64 [i386 x32], libc6-dev-sparc64 [sparc], libc6-dev-sparc [sparc64], libc6-dev-s390 [s390x], libc6-dev-s390x [s390], libc6-dev-i386 [amd64 x32], libc6-dev-powerpc [ppc64], libc6-dev-ppc64 [powerpc], libc0.1-dev-i386 [kfreebsd-amd64], lib32gcc1 [amd64 ppc64 kfreebsd-amd64 mipsn32 mipsn32el mips64 mips64el mipsn32r6 mipsn32r6el mips64r6 mips64r6el s390x sparc64 x32], libn32gcc1 [mips mipsel mips64 mips64el mipsr6 mipsr6el mips64r6 mips64r6el], lib64gcc1 [i386 mips mipsel mipsn32 mipsn32el mipsr6 mipsr6el mipsn32r6 mipsn32r6el powerpc sparc s390 x32], libc6-dev-mips64 [mips mipsel mipsn32 mipsn32el mipsr6 mipsr6el mipsn32r6 mipsn32r6el], libc6-dev-mipsn32 [mips mipsel mips64 mips64el mipsr6 mipsr6el mips64r6 mips64r6el], libc6-dev-mips32 [mipsn32 mipsn32el mips64 mips64el mipsn32r6 mipsn32r6el mips64r6 mips64r6el], libc6-dev-x32 [amd64 i386], libx32gcc1 [amd64 i386], libc6.1-dbg [alpha ia64] | libc0.3-dbg [hurd-i386] | libc0.1-dbg [kfreebsd-i386 kfreebsd-amd64] | libc6-dbg, 
@@ -12,11 +12,11 @@ Build-Depends: debhelper (>= 9.20141010), dpkg-dev (>= 1.17.14),
   libunwind8-dev [ia64], libatomic-ops-dev [ia64], 
   autogen, gawk, lzma, xz-utils, patchutils, 
   zlib1g-dev, systemtap-sdt-dev [linux-any kfreebsd-any hurd-any], 
-  binutils:native (>= 2.29.90) | binutils-multiarch:native (>= 2.29.90), binutils-hppa64-linux-gnu:native (>= 2.29.90) [hppa amd64 i386 x32], 
+  binutils:native (>= 2.30) | binutils-multiarch:native (>= 2.30), binutils-hppa64-linux-gnu:native (>= 2.30) [hppa amd64 i386 x32], 
   gperf (>= 3.0.1), bison (>= 1:2.3), flex, gettext, 
   gdb:native, 
   texinfo (>= 4.3), locales, sharutils, 
-  procps, zlib1g-dev, libantlr-java, python:native, libffi-dev, fastjar, libmagic-dev, libecj-java (>= 3.3.0-2), zip, libasound2-dev [ !hurd-any !kfreebsd-any], libxtst-dev, libxt-dev, libgtk2.0-dev (>= 2.4.4-2), libart-2.0-dev, libcairo2-dev, gnat-6:native [!m32r !sh3 !sh3eb !sh4eb !powerpcspe !m68k !mips64 !x32], g++-6:native, netbase, 
+  procps, zlib1g-dev, gnat-6:native [!m32r !sh3 !sh3eb !sh4eb !powerpcspe !m68k !mips64 !x32], g++-6:native, netbase, 
   libisl-dev (>= 0.14), libmpc-dev (>= 1.1), libmpfr-dev (>= 3.0.0-9~), libgmp-dev (>= 2:5.0.1~), lib32z1-dev [amd64 kfreebsd-amd64], lib64z1-dev [i386], 
   dejagnu [!m68k !hurd-amd64 !hurd-i386 !hurd-alpha !kfreebsd-amd64 !kfreebsd-i386 !kfreebsd-alpha], coreutils (>= 2.26) | realpath (>= 1.9.12), chrpath, lsb-release, quilt, 
   pkg-config, libgc-dev, 
@@ -853,156 +853,6 @@ Description: Runtime library for GNU Go applications (x32 debug symbols)
  Library needed for GNU Go applications linked against the
  shared library. This currently is an empty package, because the
  library is completely unstripped.
-
-Package: gcj-6
-Section: java
-Architecture: any
-Priority: optional
-Depends: gcc-6-base (= ${gcc:Version}), gcc-6 (= ${gcc:Version}), ${dep:gcj}, ${dep:gcjcross}, ${dep:libcdev}, ${dep:ecj}, ${shlibs:Depends}, dpkg (>= 1.15.4) | install-info, ${misc:Depends}
-Recommends: libecj-java-gcj
-Replaces: gcj-5-jdk (<< 5.2.1-19)
-Suggests: gcj-6-jdk
-Description: GCJ byte code and native compiler for Java(TM)
- GCJ is a front end to the GCC compiler which can natively compile both
- Java(tm) source and bytecode files. The compiler can also generate class
- files.
- .
- Install the gcj-6-jdk package for a more complete SDK environment.
-
-Package: gcj-6-jdk
-Section: java
-Architecture: any
-Priority: optional
-Depends: gcc-6-base (= ${gcc:Version}), ${dep:gcj}, ${dep:libcdev}, gcj-6 (= ${gcj:Version}), gcj-6-jre (= ${gcj:Version}), libgcj17-dev (>= ${gcj:Version}), fastjar, libgcj-bc, java-common, libantlr-java, ${shlibs:Depends}, dpkg (>= 1.15.4) | install-info, ${misc:Depends}
-Recommends: libecj-java-gcj
-Suggests: gcj-6-source (>= ${gcj:SoftVersion}), libgcj17-dbg (>= ${gcc:Version})
-Provides: java-compiler, java-sdk, java2-sdk, java5-sdk
-Conflicts: gcj-4.4, cpp-4.1 (<< 4.1.1), gcc-4.1 (<< 4.1.1)
-Replaces: libgcj11 (<< 4.5-20100101-1)
-Description: GCJ and Classpath development tools for Java(TM)
- GCJ is a front end to the GCC compiler which can natively compile both
- Java(tm) source and bytecode files. The compiler can also generate class
- files. Other java development tools from classpath are included in this
- package.
- .
- The package contains as well a collection of wrapper scripts and symlinks.
- It is meant to provide a Java-SDK-like interface to the GCJ tool set.
-
-Package: gcj-6-jre-headless
-Priority: optional
-Section: java
-Architecture: any
-Depends: gcc-6-base (= ${gcc:Version}), gcj-6-jre-lib (>= ${gcj:SoftVersion}), libgcj17 (>= ${gcj:Version}), ${dep:prctl}, ${shlibs:Depends}, ${misc:Depends}
-Suggests: fastjar, gcj-6-jdk (= ${gcj:Version}), libgcj17-awt (>= ${gcj:Version})
-Provides: java5-runtime-headless, java2-runtime-headless, java1-runtime-headless, java-runtime-headless
-Description: Java runtime environment using GIJ/Classpath (headless version)
- GIJ is a Java bytecode interpreter, not limited to interpreting bytecode.
- It includes a class loader which can dynamically load shared objects, so
- it is possible to give it the name of a class which has been compiled and
- put into a shared library on the class path.
- .
- The package contains as well a collection of wrapper scripts and symlinks.
- It is meant to provide a Java-RTE-like interface to the GIJ/GCJ tool set,
- limited to the headless tools and libraries.
-
-Package: gcj-6-jre
-Section: java
-Architecture: any
-Priority: optional
-Depends: gcc-6-base (= ${gcc:Version}), gcj-6-jre-headless (= ${gcj:Version}), libgcj17-awt (>= ${gcj:Version}), ${shlibs:Depends}, ${misc:Depends}
-Provides: java5-runtime, java2-runtime, java1-runtime, java-runtime
-Description: Java runtime environment using GIJ/Classpath
- GIJ is a Java bytecode interpreter, not limited to interpreting bytecode.
- It includes a class loader which can dynamically load shared objects, so
- it is possible to give it the name of a class which has been compiled and
- put into a shared library on the class path.
- .
- The package contains as well a collection of wrapper scripts and symlinks.
- It is meant to provide a Java-RTE-like interface to the GIJ/GCJ tool set.
-
-Package: libgcj17
-Section: libs
-Architecture: any
-Priority: optional
-Pre-Depends: ${misc:Pre-Depends}
-Multi-Arch: same
-Depends: gcc-6-base (>= ${gcc:SoftVersion}), libgcj-common (>= 1:4.1.1-21), ${shlibs:Depends}, ${misc:Depends}
-Recommends: gcj-6-jre-lib (>= ${gcj:SoftVersion})
-Suggests: libgcj17-dbg (>= ${gcc:Version}), libgcj17-awt (= ${gcj:Version})
-Description: Java runtime library for use with gcj
- This is the runtime that goes along with the gcj front end to
- gcc. libgcj includes parts of the Java Class Libraries, plus glue to
- connect the libraries to the compiler and the underlying OS.
- .
- To show file names and line numbers in stack traces, the packages
- libgcj17-dbg and binutils are required.
-
-Package: gcj-6-jre-lib
-Section: java
-Architecture: all
-Priority: optional
-Depends: gcc-6-base (>= ${gcc:SoftVersion}), libgcj17 (>= ${gcj:SoftVersion}), ${misc:Depends}
-Description: Java runtime library for use with gcj (jar files)
- This is the jar file that goes along with the gcj front end to gcc.
-
-Package: libgcj17-awt
-Section: libs
-Architecture: any
-Priority: optional
-Pre-Depends: ${misc:Pre-Depends}
-Multi-Arch: same
-Depends: gcc-6-base (>= ${gcc:SoftVersion}), libgcj17 (= ${gcj:Version}), ${shlibs:Depends}, ${misc:Depends}
-Suggests: ${pkg:gcjqt}
-Description: AWT peer runtime libraries for use with gcj
- These are runtime libraries holding the AWT peer implementations
- for libgcj (currently the GTK+ based peer library is required, the
- QT bases library is not built).
-
-Package: libgcj17-dev
-Section: libdevel
-Architecture: any
-Multi-Arch: same
-Priority: optional
-Depends: gcc-6-base (= ${gcc:Version}), libgcj17-awt (= ${gcj:Version}), libgcj-bc, ${pkg:gcjgtk}, ${pkg:gcjqt}, zlib1g-dev, ${shlibs:Depends}, ${misc:Depends}
-Suggests: libgcj-doc
-Description: Java development headers for use with gcj
- These are the development headers that go along with the gcj front end
- to gcc. libgcj includes parts of the Java Class Libraries, plus glue
- to connect the libraries to the compiler and the underlying OS.
-
-Package: libgcj17-dbg
-Section: debug
-Architecture: any
-Priority: optional
-Pre-Depends: ${misc:Pre-Depends}
-Multi-Arch: same
-Depends: gcc-6-base (= ${gcc:Version}), libgcj17 (= ${gcj:Version}), ${misc:Depends}
-Recommends: binutils, libc6-dbg | libc-dbg
-Description: Debugging symbols for libraries provided in libgcj17-dev
- The package provides debugging symbols for the libraries provided
- in libgcj17-dev.
- .
- binutils is required to show file names and line numbers in stack traces.
-
-Package: gcj-6-source
-Section: java
-Architecture: all
-Priority: optional
-Depends: gcc-6-base (>= ${gcc:SoftVersion}), gcj-6-jdk (>= ${gcj:SoftVersion}), ${misc:Depends}
-Description: GCJ java sources for use in IDEs like eclipse and netbeans
- These are the java source files packaged as a zip file for use in development
- environments like eclipse and netbeans.
-
-Package: libgcj-doc
-Section: doc
-Architecture: all
-Priority: optional
-Depends: gcc-6-base (>= ${gcc:SoftVersion}), ${misc:Depends}
-Enhances: libgcj17-dev
-Provides: classpath-doc
-Description: libgcj API documentation and example programs
- Autogenerated documentation describing the API of the libgcj library.
- Sources and precompiled example programs from the Classpath library.
 
 Package: libstdc++-6-dev
 Architecture: any
