@@ -1,15 +1,29 @@
-gcc-6 (6.4.0-17+rpi2) buster-staging; urgency=medium
-
-  * Re-enable gcj for now.
-
- -- Peter Michael Green <plugwash@raspbian.org>  Thu, 07 Jun 2018 14:05:12 +0000
-
-gcc-6 (6.4.0-17+rpi1) buster-staging; urgency=medium
+gcc-6 (6.4.0-18+rpi1) buster-staging; urgency=medium
 
   [changes brought forward from 6.4.0-11+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Sat, 10 Feb 2018 15:48:42 +0000]
   * Disable testsuite.
 
- -- Raspbian forward porter <root@raspbian.org>  Tue, 05 Jun 2018 02:26:08 +0000
+  [changes brought forward from 6.4.0-17+rpi2 by Peter Michael Green <plugwash@raspbian.org> at Thu, 07 Jun 2018 14:05:12 +0000]
+  * Re-enable gcj for now.
+
+ -- Peter Michael Green <plugwash@raspbian.org>  Fri, 22 Jun 2018 04:06:59 +0000
+
+gcc-6 (6.4.0-18) unstable; urgency=medium
+
+  * Update to SVN 20180615 (r261625) from the gcc-6-branch.
+    - Fix PR libstdc++/67554, PR libstdc++/85632, PR target/63177 (PPC),
+      PR tree-optimization/85712, PR tree-optimization/85712, PR ipa/85655,
+      PR target/85903 (x86), PR target/83687 (ARM), PR lto/85405,
+      PR lto/85405, PR fortran/85138, PR fortran/85996, PR fortran/86051,
+      PR fortran/85895, PR fortran/85780, PR fortran/85779, PR fortran/85543,
+      PR fortran/83149, PR fortran/83898, PR fortran/68846, PR fortran/70864,
+      PR fortran/85542, PR fortran/70870, PR fortran/85521, PR fortran/85687,
+      PR fortran/85507, PR fortran/81773, PR fortran/83606, PR fortran/85520,
+      PR lto/85248, PR bootstrap/86162.
+  * Fix PR middle-end/86139, taken from the gcc-8-branch. Closes: #901290.
+  * Fix build failure on hurd-i386. Closes: #898901.
+
+ -- Matthias Klose <doko@debian.org>  Fri, 15 Jun 2018 14:29:55 +0200
 
 gcc-6 (6.4.0-17) unstable; urgency=medium
 
