@@ -1,4 +1,4 @@
-gcc-6 (6.4.0-18+rpi1) buster-staging; urgency=medium
+gcc-6 (6.4.0-20+rpi1) buster-staging; urgency=medium
 
   [changes brought forward from 6.4.0-11+rpi1 by Peter Michael Green <plugwash@raspbian.org> at Sat, 10 Feb 2018 15:48:42 +0000]
   * Disable testsuite.
@@ -6,7 +6,60 @@ gcc-6 (6.4.0-18+rpi1) buster-staging; urgency=medium
   [changes brought forward from 6.4.0-17+rpi2 by Peter Michael Green <plugwash@raspbian.org> at Thu, 07 Jun 2018 14:05:12 +0000]
   * Re-enable gcj for now.
 
- -- Peter Michael Green <plugwash@raspbian.org>  Fri, 22 Jun 2018 04:06:59 +0000
+ -- Raspbian forward porter <root@raspbian.org>  Wed, 22 Aug 2018 12:46:21 +0000
+
+gcc-6 (6.4.0-20) unstable; urgency=medium
+
+  * Update to SVN 20180814 (r263539) from the gcc-6-branch.
+    - Fix PR libstdc++/83982, PR libstdc++/80893, PR libstdc++/80893,
+      PR libstdc++/68519, PR libstdc++/86292, PR libstdc++/60555,
+      PR libstdc++/86734, PR libstdc++/66145, PR libstdc++/85222,
+      PR target/86197 (PPC).
+    - Fix PR bootstrap/86724. Closes: #905708.
+  * Backport r235876 from the trunk (PPC). LP: #1783252.
+  * Add some basic autopkg tests for Ada, C, C++, Go, OpenMP and Fortran.
+  * Update the src_libgo_Makefile.in patch (Svante Signell). Closes: #905714.
+
+ -- Matthias Klose <doko@debian.org>  Tue, 14 Aug 2018 17:48:05 +0200
+
+gcc-6 (6.4.0-19) unstable; urgency=medium
+
+  * Update to SVN 20180727 (r263028) from the gcc-6-branch.
+    - Fix PR c++/86291, PR libgomp/84096, PR fortran/81304, PR fortran/81841,
+      PR libstdc++/86272, PR c++/86210, PR c++/83059, PR c/84873, PR c/84873,
+      PR debug/83550, PR c/82340, PR target/84168 (AArch64), PR target/84829,
+      PR target/84786 (x86), PR tree-optimization/86231, PR middle-end/85878,
+      PR target/85945, PR c++/85659, PR rtl-optimization/85431,
+      PR rtl-optimization/85300, PR tree-optimization/85257, PR debug/85252,
+      PR rtl-optimization/85167, PR inline-asm/85022, PR inline-asm/85034,
+      PR inline-asm/85022, PR inline-asm/84941, PR debug/84875, PR c/84953,
+      PR target/84899, PR c++/79085, PR target/84772, PR c++/84767,
+      PR tree-optimization/84739, PR target/84700, PR inline-asm/84625,
+      PR ipa/84425, PR c/82210, PR sanitizer/83987, PR rtl-optimization/83986,
+      PR middle-end/84040, PR target/83930, PR preprocessor/83722,
+      PR tree-optimization/83605, PR c++/83553, PR rtl-optimization/80747,
+      PR rtl-optimization/83512, PR tree-optimization/83523,
+      PR tree-optimization/83521, PR ipa/82801, PR ipa/83346, PR target/81906,
+      PR c++/81212, PR target/78643, PR target/80583, PR target/80819,
+      PR sanitizer/83014, PR middle-end/82253, PR target/82880, PR c++/82159,
+      PR c++/82159, PR rtl-optimization/82192, PR tree-optimization/85989,
+      PR tree-optimization/82108, PR tree-optimization/81410,
+      PR tree-optimization/79920, PR middle-end/84607, PR middle-end/85588,
+      PR middle-end/81884, PR middle-end/85244, PR tree-optimization/85597,
+      PR middle-end/83623, PR tree-optimization/82264,
+      PR tree-optimization/82285, PR tree-optimization/82402,
+      PR tree-optimization/82697, PR middle-end/82765, PR middle-end/83713,
+      PR c++/86291, PR c++/85147, PR c++/85140, PR c++/84791, PR c++/85076,
+      PR c++/85068, PR c++/84874, PR c++/84222, PR c++/84076, PR c++/84662,
+      PR c++/84558, PR c++/84448, PR c++/84341, PR sanitizer/83987,
+      PR sanitizer/83987, PR c++/83824, PR c++/79650, PR c++/80259,
+      PR c++/82781, PR fortran/82969, PR fortran/86242, PR fortran/85313,
+      PR fortran/81304, PR fortran/81841.
+  * Fix applying the powerpcspe patches.
+  * Add a full version symlink for the go library, so that the go tool
+    can find the library. LP: #1783930.
+
+ -- Matthias Klose <doko@debian.org>  Fri, 27 Jul 2018 10:12:29 +0200
 
 gcc-6 (6.4.0-18) unstable; urgency=medium
 

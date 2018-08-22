@@ -56,7 +56,7 @@ Uploaders: Iain Buclaw <ibuclaw@ubuntu.com>, Matthias Klose <doko@debian.org>
 ', `dnl
 Uploaders: Matthias Klose <doko@debian.org>
 ')dnl SRCNAME
-Standards-Version: 4.1.4
+Standards-Version: 4.1.5
 ifdef(`TARGET',`dnl cross
 Build-Depends: DEBHELPER_BUILD_DEP DPKG_BUILD_DEP
   LIBC_BUILD_DEP, LIBC_BIARCH_BUILD_DEP
@@ -97,6 +97,7 @@ Homepage: http://gcc.gnu.org/
 ')dnl SRCNAME
 Vcs-Browser: http://svn.debian.org/viewsvn/gcccvs/branches/sid/gcc`'PV/
 Vcs-Svn: svn://anonscm.debian.org/gcccvs/branches/sid/gcc`'PV
+XS-Testsuite: autopkgtest
 
 ifelse(regexp(SRCNAME, `gcc-snapshot'),0,`dnl
 Package: gcc-snapshot`'TS
