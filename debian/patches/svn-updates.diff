@@ -1,10 +1,10 @@
-# DP: updates from the 6 branch upto 20180814 (r263539).
+# DP: updates from the 6 branch upto 20180924 (r264530).
 
 last_update()
 {
 	cat > ${dir}LAST_UPDATED <EOF
-Tue Aug 14 17:37:31 CEST 2018
-Tue Aug 14 15:37:31 UTC 2018 (revision 263539)
+Mon Sep 24 13:28:31 CEST 2018
+Mon Sep 24 11:28:31 UTC 2018 (revision 264530)
 EOF
 }
 
@@ -439,6 +439,39 @@ Index: libquadmath/math/roundq.c
      {
        if (j0 < 0)
  	{
+Index: libsanitizer/sanitizer_common/sanitizer_platform_limits_posix.cc
+===================================================================
+--- a/src/libsanitizer/sanitizer_common/sanitizer_platform_limits_posix.cc	(.../tags/gcc_6_4_0_release)
++++ b/src/libsanitizer/sanitizer_common/sanitizer_platform_limits_posix.cc	(.../branches/gcc-6-branch)
+@@ -150,7 +150,6 @@
+ # include <sys/procfs.h>
+ #endif
+ #include <sys/user.h>
+-#include <sys/ustat.h>
+ #include <linux/cyclades.h>
+ #include <linux/if_eql.h>
+ #include <linux/if_plip.h>
+@@ -243,7 +242,19 @@
+ #endif // SANITIZER_LINUX || SANITIZER_FREEBSD
+ 
+ #if SANITIZER_LINUX && !SANITIZER_ANDROID
+-  unsigned struct_ustat_sz = sizeof(struct ustat);
++  // Use pre-computed size of struct ustat to avoid <sys/ustat.h> which
++  // has been removed from glibc 2.28.
++#if defined(__aarch64__) || defined(__s390x__) || defined (__mips64) \
++  || defined(__powerpc64__) || defined(__arch64__) || defined(__sparcv9) \
++  || defined(__x86_64__)
++#define SIZEOF_STRUCT_USTAT 32
++#elif defined(__arm__) || defined(__i386__) || defined(__mips__) \
++  || defined(__powerpc__) || defined(__s390__) || defined(__sparc__)
++#define SIZEOF_STRUCT_USTAT 20
++#else
++#error Unknown size of struct ustat
++#endif
++  unsigned struct_ustat_sz = SIZEOF_STRUCT_USTAT;
+   unsigned struct_rlimit64_sz = sizeof(struct rlimit64);
+   unsigned struct_statvfs64_sz = sizeof(struct statvfs64);
+ #endif // SANITIZER_LINUX && !SANITIZER_ANDROID
 Index: libsanitizer/sanitizer_common/sanitizer_linux.cc
 ===================================================================
 --- a/src/libsanitizer/sanitizer_common/sanitizer_linux.cc	(.../tags/gcc_6_4_0_release)
@@ -492,7 +525,27 @@ Index: libsanitizer/ChangeLog
 ===================================================================
 --- a/src/libsanitizer/ChangeLog	(.../tags/gcc_6_4_0_release)
 +++ b/src/libsanitizer/ChangeLog	(.../branches/gcc-6-branch)
-@@ -1,3 +1,14 @@
+@@ -1,3 +1,34 @@
++2017-09-23  Matthias Klose  <doko@ubuntu.com>
++
++	Backported from the gcc-7-branch:
++	2018-05-31  Matthias Klose  <doko@ubuntu.com>
++
++	PR sanitizer/86012
++	* sanitizer_common/sanitizer_platform_limits_posix.cc: Define
++	SIZEOF_STRUCT_USTAT for 32bit sparc.
++
++2017-09-21  Matthias Klose  <doko@ubuntu.com>
++
++	Backported from the gcc-7-branch:
++	2018-05-24  H.J. Lu  <hongjiu.lu@intel.com>
++
++	PR sanitizer/85835
++	* sanitizer_common/sanitizer_platform_limits_posix.cc: Don't
++	include <sys/ustat.h> for Linux.
++	(SIZEOF_STRUCT_USTAT): New.
++	(struct_ustat_sz): Use SIZEOF_STRUCT_USTAT for Linux.
++
 +2017-09-07  Matthias Klose  <doko@ubuntu.com>
 +
 +	Backported from mainline
@@ -9578,7 +9631,22 @@ Index: libgcc/ChangeLog
 ===================================================================
 --- a/src/libgcc/ChangeLog	(.../tags/gcc_6_4_0_release)
 +++ b/src/libgcc/ChangeLog	(.../branches/gcc-6-branch)
-@@ -1,3 +1,100 @@
+@@ -1,3 +1,115 @@
++2018-08-17  John David Anglin  <danglin@gcc.gnu.org>
++
++	Backport from mainline
++	2018-08-11  John David Anglin  <danglin@gcc.gnu.org>
++
++	* config/pa/linux-atomic.c: Update comment.
++	(FETCH_AND_OP_2, OP_AND_FETCH_2, FETCH_AND_OP_WORD, OP_AND_FETCH_WORD,
++	COMPARE_AND_SWAP_2, __sync_val_compare_and_swap_4,
++	SYNC_LOCK_TEST_AND_SET_2, __sync_lock_test_and_set_4): Use
++	__ATOMIC_RELAXED for atomic loads.
++	(SYNC_LOCK_RELEASE_1): New define.  Use __sync_synchronize() and
++	unordered store to release lock.
++	(__sync_lock_release_8): Likewise.
++	(SYNC_LOCK_RELEASE_2): Remove define.
++	 
 +2018-04-02  H.J. Lu  <hongjiu.lu@intel.com>
 +
 +	Backport from mainline
@@ -10049,6 +10117,149 @@ Index: libgcc/config/pa/linux-unwind.h
    } *frame;
  
    /* rt_sigreturn trampoline:
+Index: libgcc/config/pa/linux-atomic.c
+===================================================================
+--- a/src/libgcc/config/pa/linux-atomic.c	(.../tags/gcc_6_4_0_release)
++++ b/src/libgcc/config/pa/linux-atomic.c	(.../branches/gcc-6-branch)
+@@ -28,15 +28,10 @@
+ #define EBUSY   16
+ #define ENOSYS 251 
+ 
+-/* All PA-RISC implementations supported by linux have strongly
+-   ordered loads and stores.  Only cache flushes and purges can be
+-   delayed.  The data cache implementations are all globally
+-   coherent.  Thus, there is no need to synchonize memory accesses.
++/* PA-RISC 2.0 supports out-of-order execution for loads and stores.
++   Thus, we need to synchonize memory accesses.  For more info, see:
++   "Advanced Performance Features of the 64-bit PA-8000" by Doug Hunt.
+ 
+-   GCC automatically issues a asm memory barrier when it encounters
+-   a __sync_synchronize builtin.  Thus, we do not need to define this
+-   builtin.
+-
+    We implement byte, short and int versions of each atomic operation
+    using the kernel helper defined below.  There is no support for
+    64-bit operations yet.  */
+@@ -119,7 +114,7 @@
+     long failure;							\
+ 									\
+     do {								\
+-      tmp = __atomic_load_n (ptr, __ATOMIC_SEQ_CST);			\
++      tmp = __atomic_load_n (ptr, __ATOMIC_RELAXED);			\
+       newval = PFX_OP (tmp INF_OP val);					\
+       failure = __kernel_cmpxchg2 (ptr, &tmp, &newval, INDEX);		\
+     } while (failure != 0);						\
+@@ -156,7 +151,7 @@
+     long failure;							\
+ 									\
+     do {								\
+-      tmp = __atomic_load_n (ptr, __ATOMIC_SEQ_CST);			\
++      tmp = __atomic_load_n (ptr, __ATOMIC_RELAXED);			\
+       newval = PFX_OP (tmp INF_OP val);					\
+       failure = __kernel_cmpxchg2 (ptr, &tmp, &newval, INDEX);		\
+     } while (failure != 0);						\
+@@ -193,7 +188,7 @@
+     long failure;							\
+ 									\
+     do {								\
+-      tmp = __atomic_load_n (ptr, __ATOMIC_SEQ_CST);			\
++      tmp = __atomic_load_n (ptr, __ATOMIC_RELAXED);			\
+       failure = __kernel_cmpxchg (ptr, tmp, PFX_OP (tmp INF_OP val));	\
+     } while (failure != 0);						\
+ 									\
+@@ -215,7 +210,7 @@
+     long failure;							\
+ 									\
+     do {								\
+-      tmp = __atomic_load_n (ptr, __ATOMIC_SEQ_CST);			\
++      tmp = __atomic_load_n (ptr, __ATOMIC_RELAXED);			\
+       failure = __kernel_cmpxchg (ptr, tmp, PFX_OP (tmp INF_OP val));	\
+     } while (failure != 0);						\
+ 									\
+@@ -241,7 +236,7 @@
+ 									\
+     while (1)								\
+       {									\
+-	actual_oldval = __atomic_load_n (ptr, __ATOMIC_SEQ_CST);	\
++	actual_oldval = __atomic_load_n (ptr, __ATOMIC_RELAXED);	\
+ 									\
+ 	if (__builtin_expect (oldval != actual_oldval, 0))		\
+ 	  return actual_oldval;						\
+@@ -273,7 +268,7 @@
+     
+   while (1)
+     {
+-      actual_oldval = __atomic_load_n (ptr, __ATOMIC_SEQ_CST);
++      actual_oldval = __atomic_load_n (ptr, __ATOMIC_RELAXED);
+ 
+       if (__builtin_expect (oldval != actual_oldval, 0))
+ 	return actual_oldval;
+@@ -300,7 +295,7 @@
+     long failure;							\
+ 									\
+     do {								\
+-      oldval = __atomic_load_n (ptr, __ATOMIC_SEQ_CST);			\
++      oldval = __atomic_load_n (ptr, __ATOMIC_RELAXED);			\
+       failure = __kernel_cmpxchg2 (ptr, &oldval, &val, INDEX);		\
+     } while (failure != 0);						\
+ 									\
+@@ -318,7 +313,7 @@
+   int oldval;
+ 
+   do {
+-    oldval = __atomic_load_n (ptr, __ATOMIC_SEQ_CST);
++    oldval = __atomic_load_n (ptr, __ATOMIC_RELAXED);
+     failure = __kernel_cmpxchg (ptr, oldval, val);
+   } while (failure != 0);
+ 
+@@ -325,31 +320,24 @@
+   return oldval;
+ }
+ 
+-#define SYNC_LOCK_RELEASE_2(TYPE, WIDTH, INDEX)			\
++void HIDDEN
++__sync_lock_release_8 (long long *ptr)
++{
++  /* All accesses must be complete before we release the lock.  */
++  __sync_synchronize ();
++  *(double *)ptr = 0;
++}
++
++#define SYNC_LOCK_RELEASE_1(TYPE, WIDTH)			\
+   void HIDDEN							\
+   __sync_lock_release_##WIDTH (TYPE *ptr)			\
+   {								\
+-    TYPE oldval, zero = 0;					\
+-    long failure;						\
+-								\
+-    do {							\
+-      oldval = __atomic_load_n (ptr, __ATOMIC_SEQ_CST);		\
+-      failure = __kernel_cmpxchg2 (ptr, &oldval, &zero, INDEX);	\
+-    } while (failure != 0);					\
++    /* All accesses must be complete before we release		\
++       the lock.  */						\
++    __sync_synchronize ();					\
++    *ptr = 0;							\
+   }
+ 
+-SYNC_LOCK_RELEASE_2 (long long, 8, 3)
+-SYNC_LOCK_RELEASE_2 (short, 2, 1)
+-SYNC_LOCK_RELEASE_2 (signed char, 1, 0)
+-
+-void HIDDEN
+-__sync_lock_release_4 (int *ptr)
+-{
+-  long failure;
+-  int oldval;
+-
+-  do {
+-    oldval = __atomic_load_n (ptr, __ATOMIC_SEQ_CST);
+-    failure = __kernel_cmpxchg (ptr, oldval, 0);
+-  } while (failure != 0);
+-}
++SYNC_LOCK_RELEASE_1 (int, 4)
++SYNC_LOCK_RELEASE_1 (short, 2)
++SYNC_LOCK_RELEASE_1 (signed char, 1)
 Index: libgcc/config/pa/fptr.c
 ===================================================================
 --- a/src/libgcc/config/pa/fptr.c	(.../tags/gcc_6_4_0_release)
@@ -10527,7 +10738,24 @@ Index: gcc/tree-ssa-tail-merge.c
 ===================================================================
 --- a/src/gcc/tree-ssa-tail-merge.c	(.../tags/gcc_6_4_0_release)
 +++ b/src/gcc/tree-ssa-tail-merge.c	(.../branches/gcc-6-branch)
-@@ -808,6 +808,9 @@
+@@ -298,7 +298,15 @@
+   if (gimple_vdef (stmt) != NULL_TREE
+       || gimple_has_side_effects (stmt)
+       || gimple_could_trap_p_1 (stmt, false, false)
+-      || gimple_vuse (stmt) != NULL_TREE)
++      || gimple_vuse (stmt) != NULL_TREE
++      /* Copied from tree-ssa-ifcombine.c:bb_no_side_effects_p():
++	 const calls don't match any of the above, yet they could
++	 still have some side-effects - they could contain
++	 gimple_could_trap_p statements, like floating point
++	 exceptions or integer division by zero.  See PR70586.
++	 FIXME: perhaps gimple_has_side_effects or gimple_could_trap_p
++	 should handle this.  */
++      || is_gimple_call (stmt))
+     return false;
+ 
+   def_p = SINGLE_SSA_DEF_OPERAND (stmt, SSA_OP_DEF);
+@@ -808,6 +816,9 @@
  same_succ_flush_bb (basic_block bb)
  {
    same_succ *same = BB_SAME_SUCC (bb);
@@ -10537,7 +10765,7 @@ Index: gcc/tree-ssa-tail-merge.c
    BB_SAME_SUCC (bb) = NULL;
    if (bitmap_single_bit_set_p (same->bbs))
      same_succ_htab->remove_elt_with_hash (same, same->hashval);
-@@ -1433,7 +1436,7 @@
+@@ -1433,7 +1444,7 @@
        /* TODO: handle blocks with phi-nodes.  We'll have to find corresponding
  	 phi-nodes in bb1 and bb2, with the same alternatives for the same
  	 preds.  */
@@ -10546,7 +10774,7 @@ Index: gcc/tree-ssa-tail-merge.c
  	continue;
  
        nr_comparisons = 0;
-@@ -1441,7 +1444,7 @@
+@@ -1441,7 +1452,7 @@
  	{
  	  bb2 = BASIC_BLOCK_FOR_FN (cfun, j);
  
@@ -11065,7 +11293,7 @@ Index: gcc/DATESTAMP
 +++ b/src/gcc/DATESTAMP	(.../branches/gcc-6-branch)
 @@ -1 +1 @@
 -20170704
-+20180814
++20180924
 Index: gcc/valtrack.c
 ===================================================================
 --- a/src/gcc/valtrack.c	(.../tags/gcc_6_4_0_release)
@@ -12064,7 +12292,58 @@ Index: gcc/ChangeLog
 ===================================================================
 --- a/src/gcc/ChangeLog	(.../tags/gcc_6_4_0_release)
 +++ b/src/gcc/ChangeLog	(.../branches/gcc-6-branch)
-@@ -1,3 +1,2339 @@
+@@ -1,3 +1,2390 @@
++2018-09-19  John David Anglin  <danglin@gcc.gnu.org>
++
++	* config/pa/pa.md (atomic_storeqi): Restore deleted expander.
++	(atomic_storehi): Likewise.
++	(atomic_storesi): Likewise.
++	(atomic_loaddi): Restore compare and swap exchange loop code.
++
++2018-09-04  Max Filippov  <jcmvbkbc@gmail.com>
++
++	Backport from mainline
++	2018-09-04  Max Filippov  <jcmvbkbc@gmail.com>
++
++	* config/xtensa/xtensa.c (xtensa_expand_atomic): Reorder AND and
++	XOR operations in NAND case.
++
++2018-09-03  Tom de Vries  <tdevries@suse.de>
++
++	backport from trunk:
++	2018-06-21  Tom de Vries  <tdevries@suse.de>
++
++	PR tree-optimization/85859
++	* tree-ssa-tail-merge.c (stmt_local_def): Copy gimple_is_call
++	test with comment from bb_no_side_effects_p.
++
++2018-08-21  H.J. Lu  <hongjiu.lu@intel.com>
++
++	Backport from mainline
++	2018-08-20  H.J. Lu  <hongjiu.lu@intel.com>
++
++	PR target/87014
++	* config/i386/i386.md (eh_return): Always update EH return
++	address in word_mode.
++
++2018-08-17  John David Anglin  <danglin@gcc.gnu.org>
++
++	Backport from mainline
++	2018-08-11  John David Anglin  <danglin@gcc.gnu.org>
++
++	* config/pa/pa.md (UNSPEC_MEMORY_BARRIER): New unspec enum.
++	Update comment for atomic instructions.
++	(atomic_storeqi, atomic_storehi, atomic_storesi, atomic_storesf,
++	atomic_loaddf, atomic_loaddf_1, atomic_storedf, atomic_storedf_1):
++	Remove.
++	(atomic_loaddi): Revise fence expansion to only emit fence prior to
++	load for __ATOMIC_SEQ_CST model.
++	(atomic_loaddi_1): Remove float register target.
++	(atomic_storedi): Handle CONST_INT values.
++	(atomic_storedi_1): Remove float register source.  Add special case
++	for zero value.
++	(memory_barrier): New expander and insn.
++
 +2018-08-14  Matthias Klose  <doko@ubuntu.com>
 +
 +	Backport from mainline
@@ -14404,7 +14683,7 @@ Index: gcc/ChangeLog
  2017-07-04  Release Manager
  
  	* GCC 6.4.0 released.
-@@ -83,7 +2423,7 @@
+@@ -83,7 +2474,7 @@
  	Backport from mainline
  	2017-05-04  Prakhar Bahuguna  <prakhar.bahuguna@arm.com>
  
@@ -14413,7 +14692,7 @@ Index: gcc/ChangeLog
  	__builtin_arm_ldfscr to __builtin_arm_get_fpscr, and rename
  	__builtin_arm_stfscr to __builtin_arm_set_fpscr.
  
-@@ -417,7 +2757,7 @@
+@@ -417,7 +2808,7 @@
  
  	PR target/80968
  	* config/sparc/sparc.c (sparc_flat_expand_epilogue): Don't
@@ -14422,7 +14701,7 @@ Index: gcc/ChangeLog
  	(sparc_expand_epilogue): Do it here.
  	* config/sparc/sparc.md (return expander): Emit frame blockage
  	for alloca here too.
-@@ -4231,6 +6571,24 @@
+@@ -4231,6 +6622,24 @@
  	* gimple-fold.c (fold_builtin_memory_op): Use
  	get_addr_base_and_unit_offset instead of get_ref_base_and_extent.
  
@@ -21701,6 +21980,38 @@ Index: gcc/testsuite/gfortran.dg/pr81735.f90
 +    end function foo
 +end program fooprog
 +! { dg-final { scan-tree-dump-times "__builtin_free" 1 "original" } }
+Index: gcc/testsuite/gfortran.dg/generic_34.f90
+===================================================================
+--- a/src/gcc/testsuite/gfortran.dg/generic_34.f90	(.../tags/gcc_6_4_0_release)
++++ b/src/gcc/testsuite/gfortran.dg/generic_34.f90	(.../branches/gcc-6-branch)
+@@ -0,0 +1,27 @@
++! { dg-do compile }
++!
++! PR 86116: [6/7/8/9 Regression] Ambiguous generic interface not recognised
++!
++! Contributed by martin <mscfd@gmx.net>
++
++module mod
++
++   type :: t
++   end type t
++
++   interface sub
++      module procedure s1
++      module procedure s2
++   end interface
++
++contains
++
++   subroutine s1(x)  ! { dg-error "Ambiguous interfaces in generic interface" }
++      type(t) :: x
++   end subroutine
++
++   subroutine s2(x)  ! { dg-error "Ambiguous interfaces in generic interface" }
++      class(*), allocatable :: x
++   end subroutine
++
++end
 Index: gcc/testsuite/gfortran.dg/deallocate_error_3.f90
 ===================================================================
 --- a/src/gcc/testsuite/gfortran.dg/deallocate_error_3.f90	(.../tags/gcc_6_4_0_release)
@@ -24105,6 +24416,30 @@ Index: gcc/testsuite/gcc.dg/pr84607.c
 +    abort ();
 +  return 0;
 +}
+Index: gcc/testsuite/gcc.dg/pr85859.c
+===================================================================
+--- a/src/gcc/testsuite/gcc.dg/pr85859.c	(.../tags/gcc_6_4_0_release)
++++ b/src/gcc/testsuite/gcc.dg/pr85859.c	(.../branches/gcc-6-branch)
+@@ -0,0 +1,19 @@
++/* { dg-do run } */
++/* { dg-options "-ftree-tail-merge -Wno-div-by-zero -O2 -fno-dce -fno-isolate-erroneous-paths-dereference -fno-tree-dce -fno-tree-vrp" } */
++
++int b, c, d, e;
++
++__attribute__ ((noinline, noclone))
++int foo (short f)
++{
++  f %= 0;
++  return f;
++}
++
++int
++main (void)
++{
++  b = (unsigned char) __builtin_parity (d);
++  e ? foo (0) : (long) &c;
++  return 0;
++}
 Index: gcc/testsuite/gcc.dg/ubsan/pr83014.c
 ===================================================================
 --- a/src/gcc/testsuite/gcc.dg/ubsan/pr83014.c	(.../tags/gcc_6_4_0_release)
@@ -25356,7 +25691,29 @@ Index: gcc/testsuite/ChangeLog
 ===================================================================
 --- a/src/gcc/testsuite/ChangeLog	(.../tags/gcc_6_4_0_release)
 +++ b/src/gcc/testsuite/ChangeLog	(.../branches/gcc-6-branch)
-@@ -1,3 +1,1989 @@
+@@ -1,3 +1,2011 @@
++2018-09-07  Janus Weil  <janus@gcc.gnu.org>
++
++	Backported from trunk
++	PR fortran/86116
++	* gfortran.dg/generic_34.f90: New test case.
++
++2018-09-03  Tom de Vries  <tdevries@suse.de>
++
++	backport from trunk:
++	2018-06-21  Tom de Vries  <tdevries@suse.de>
++
++	PR tree-optimization/85859
++	* gcc.dg/pr85859.c: New test.
++
++2018-08-21  H.J. Lu  <hongjiu.lu@intel.com>
++
++	Backport from mainline
++	2018-08-20  H.J. Lu  <hongjiu.lu@intel.com>
++
++	PR target/87014
++	* g++.dg/torture/pr87014.C: New file.
++
 +2018-07-12  Richard Biener  <rguenther@suse.de>
 +
 +	PR target/84829
@@ -27346,7 +27703,7 @@ Index: gcc/testsuite/ChangeLog
  2017-07-04  Release Manager
  
  	* GCC 6.4.0 released.
-@@ -509,7 +2495,7 @@
+@@ -509,7 +2517,7 @@
  	2017-02-21  Jakub Jelinek  <jakub@redhat.com>
  
  	PR c++/79639
@@ -27355,7 +27712,7 @@ Index: gcc/testsuite/ChangeLog
  
  	PR target/79570
  	* gcc.dg/pr79570.c: New test.
-@@ -612,14 +2598,14 @@
+@@ -612,14 +2620,14 @@
  
  	Backport from trunk
  	PR fortran/71838
@@ -27373,7 +27730,7 @@ Index: gcc/testsuite/ChangeLog
  
  2017-03-31  Richard Sandiford  <richard.sandiford@arm.com>
  
-@@ -689,7 +2675,7 @@
+@@ -689,7 +2697,7 @@
  
  	Backport from trunk
  	PR fortran/79434
@@ -27382,7 +27739,7 @@ Index: gcc/testsuite/ChangeLog
  
  2017-03-24  Tom de Vries  <tom@codesourcery.com>
  
-@@ -2843,7 +4829,7 @@
+@@ -2843,7 +4851,7 @@
  
  	Backport from trunk
  	PR fortran/71883
@@ -27391,7 +27748,7 @@ Index: gcc/testsuite/ChangeLog
  
  2016-07-26  Bill Schmidt  <wschmidt@linux.vnet.ibm.com>
  
-@@ -2922,6 +4908,23 @@
+@@ -2922,6 +4930,23 @@
  	* g++.dg/cpp0x/pr70869.C: New test.
  	* g++.dg/cpp0x/pr71054.C: New test.
  
@@ -27415,7 +27772,7 @@ Index: gcc/testsuite/ChangeLog
  2016-07-18  Michael Meissner  <meissner@linux.vnet.ibm.com>
  
  	Back port from mainline
-@@ -6544,7 +8547,7 @@
+@@ -6544,7 +8569,7 @@
  2016-02-20  Paul Thomas  <pault@gcc.gnu.org>
  
  	PR fortran/69423
@@ -28233,6 +28590,48 @@ Index: gcc/testsuite/g++.dg/torture/pr81977.C
 +  if (msg1._payload._pref.x != 0xabcd)
 +    __builtin_abort ();
 +  delete [] buffer;
++}
+Index: gcc/testsuite/g++.dg/torture/pr87014.C
+===================================================================
+--- a/src/gcc/testsuite/g++.dg/torture/pr87014.C	(.../tags/gcc_6_4_0_release)
++++ b/src/gcc/testsuite/g++.dg/torture/pr87014.C	(.../branches/gcc-6-branch)
+@@ -0,0 +1,37 @@
++// { dg-do run }
++
++void
++fillstack ()
++{
++  long long foo[] =
++    {
++      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
++    };
++}
++
++void
++f (long long=-1,long long=-1,long long=-1,long long=-1,
++   long long=-1,long long=-1,long long arg7_on_stack=-1)
++{
++  throw 0;
++}
++
++void
++g()
++{
++  try
++    {
++      f ();
++    }
++  catch (int)
++    {
++    }
++}
++
++int
++main()
++{
++  fillstack ();
++  g ();
++  return 0;
 +}
 Index: gcc/testsuite/g++.dg/torture/pr81987.C
 ===================================================================
@@ -31765,7 +32164,30 @@ Index: gcc/fortran/interface.c
     Contributed by Andy Vaught
  
  This file is part of GCC.
-@@ -1165,8 +1165,13 @@
+@@ -638,6 +638,13 @@
+   if (s2->attr.ext_attr & (1 << EXT_ATTR_NO_ARG_CHECK))
+     return 1;
+ 
++  return gfc_compare_types (&s1->ts, &s2->ts) || s2->ts.type == BT_ASSUMED;
++}
++
++
++static bool
++compare_type_characteristics (gfc_symbol *s1, gfc_symbol *s2)
++{
+   /* TYPE and CLASS of the same declared type are type compatible,
+      but have different characteristics.  */
+   if ((s1->ts.type == BT_CLASS && s2->ts.type == BT_DERIVED)
+@@ -644,7 +651,7 @@
+       || (s1->ts.type == BT_DERIVED && s2->ts.type == BT_CLASS))
+     return 0;
+ 
+-  return gfc_compare_types (&s1->ts, &s2->ts) || s2->ts.type == BT_ASSUMED;
++  return compare_type (s1, s2);
+ }
+ 
+ 
+@@ -1165,8 +1172,13 @@
  static int
  symbol_rank (gfc_symbol *sym)
  {
@@ -31781,7 +32203,26 @@ Index: gcc/fortran/interface.c
    return as ? as->rank : 0;
  }
  
-@@ -2705,7 +2710,8 @@
+@@ -1185,7 +1197,8 @@
+   /* Check type and rank.  */
+   if (type_must_agree)
+     {
+-      if (!compare_type (s1, s2) || !compare_type (s2, s1))
++      if (!compare_type_characteristics (s1, s2)
++	  || !compare_type_characteristics (s2, s1))
+ 	{
+ 	  snprintf (errmsg, err_len, "Type mismatch in argument '%s' (%s/%s)",
+ 		    s1->name, gfc_typename (&s1->ts), gfc_typename (&s2->ts));
+@@ -1404,7 +1417,7 @@
+     return true;
+ 
+   /* Check type and rank.  */
+-  if (!compare_type (r1, r2))
++  if (!compare_type_characteristics (r1, r2))
+     {
+       snprintf (errmsg, err_len, "Type mismatch in function result (%s/%s)",
+ 		gfc_typename (&r1->ts), gfc_typename (&r2->ts));
+@@ -2705,7 +2718,8 @@
  
  static int
  compare_actual_formal (gfc_actual_arglist **ap, gfc_formal_arglist *formal,
@@ -31791,7 +32232,7 @@ Index: gcc/fortran/interface.c
  {
    gfc_actual_arglist **new_arg, *a, *actual;
    gfc_formal_arglist *f;
-@@ -2733,6 +2739,13 @@
+@@ -2733,6 +2747,13 @@
  
    for (a = actual; a; a = a->next, f = f->next)
      {
@@ -31805,7 +32246,7 @@ Index: gcc/fortran/interface.c
        /* Look for keywords but ignore g77 extensions like %VAL.  */
        if (a->name != NULL && a->name[0] != '%')
  	{
-@@ -3053,8 +3066,9 @@
+@@ -3053,8 +3074,9 @@
  	}
  
        /* Check intent = OUT/INOUT for definable actual argument.  */
@@ -31817,7 +32258,7 @@ Index: gcc/fortran/interface.c
  	{
  	  const char* context = (where
  				 ? _("actual argument to INTENT = OUT/INOUT")
-@@ -3152,7 +3166,8 @@
+@@ -3152,7 +3174,8 @@
  		       "at %L", where);
  	  return 0;
  	}
@@ -31827,7 +32268,7 @@ Index: gcc/fortran/interface.c
  	{
  	  if (where)
  	    gfc_error ("Missing actual argument for argument %qs at %L",
-@@ -3438,6 +3453,7 @@
+@@ -3438,6 +3461,7 @@
  bool
  gfc_procedure_use (gfc_symbol *sym, gfc_actual_arglist **ap, locus *where)
  {
@@ -31835,7 +32276,7 @@ Index: gcc/fortran/interface.c
    gfc_formal_arglist *dummy_args;
  
    /* Warn about calls with an implicit interface.  Special case
-@@ -3464,8 +3480,6 @@
+@@ -3464,8 +3488,6 @@
  
    if (sym->attr.if_source == IFSRC_UNKNOWN)
      {
@@ -31844,7 +32285,7 @@ Index: gcc/fortran/interface.c
        if (sym->attr.pointer)
  	{
  	  gfc_error ("The pointer object %qs at %L must have an explicit "
-@@ -3557,9 +3571,12 @@
+@@ -3557,9 +3579,12 @@
  
    dummy_args = gfc_sym_get_dummy_args (sym);
  
@@ -31859,7 +32300,7 @@ Index: gcc/fortran/interface.c
    if (!check_intents (dummy_args, *ap))
      return false;
  
-@@ -3606,7 +3623,7 @@
+@@ -3606,7 +3631,7 @@
      }
  
    if (!compare_actual_formal (ap, comp->ts.interface->formal, 0,
@@ -31868,7 +32309,7 @@ Index: gcc/fortran/interface.c
      return;
  
    check_intents (comp->ts.interface->formal, *ap);
-@@ -3631,7 +3648,7 @@
+@@ -3631,7 +3656,7 @@
    dummy_args = gfc_sym_get_dummy_args (sym);
  
    r = !sym->attr.elemental;
@@ -32390,7 +32831,17 @@ Index: gcc/fortran/ChangeLog
 ===================================================================
 --- a/src/gcc/fortran/ChangeLog	(.../tags/gcc_6_4_0_release)
 +++ b/src/gcc/fortran/ChangeLog	(.../branches/gcc-6-branch)
-@@ -1,3 +1,470 @@
+@@ -1,3 +1,480 @@
++2018-09-07  Janus Weil  <janus@gcc.gnu.org>
++
++	Backported from trunk
++	PR fortran/86116
++	* interface.c (compare_type): Remove a CLASS/TYPE check.
++	(compare_type_characteristics): New function that behaves like the old
++	'compare_type'.
++	(gfc_check_dummy_characteristics, gfc_check_result_characteristics):
++	Call 'compare_type_characteristics' instead of 'compare_type'.
++
 +2018-07-03  Paul Thomas  <pault@gcc.gnu.org>
 +
 +	PR fortran/82969
@@ -38598,7 +39049,19 @@ Index: gcc/config/i386/i386.md
     (set_attr "length_immediate" "0")
     (set_attr "maybe_prefix_bnd" "1")])
  
-@@ -14223,7 +14254,7 @@
+@@ -12668,7 +12699,10 @@
+      stack address we wish to restore.  */
+   tmp = gen_rtx_PLUS (Pmode, arg_pointer_rtx, sa);
+   tmp = plus_constant (Pmode, tmp, -UNITS_PER_WORD);
+-  tmp = gen_rtx_MEM (Pmode, tmp);
++  /* Return address is always in word_mode.  */
++  tmp = gen_rtx_MEM (word_mode, tmp);
++  if (GET_MODE (ra) != word_mode)
++    ra = convert_to_mode (word_mode, ra, 1);
+   emit_move_insn (tmp, ra);
+ 
+   emit_jump_insn (gen_eh_return_internal ());
+@@ -14223,7 +14257,7 @@
    [(set (match_operand:SF 0 "register_operand" "=x")
  	(unspec:SF [(match_operand:SF 1 "nonimmediate_operand" "xm")]
  		   UNSPEC_RCP))]
@@ -38607,7 +39070,7 @@ Index: gcc/config/i386/i386.md
    "%vrcpss\t{%1, %d0|%d0, %1}"
    [(set_attr "type" "sse")
     (set_attr "atom_sse_attr" "rcp")
-@@ -14548,7 +14579,7 @@
+@@ -14548,7 +14582,7 @@
    [(set (match_operand:SF 0 "register_operand" "=x")
  	(unspec:SF [(match_operand:SF 1 "nonimmediate_operand" "xm")]
  		   UNSPEC_RSQRT))]
@@ -38616,7 +39079,7 @@ Index: gcc/config/i386/i386.md
    "%vrsqrtss\t{%1, %d0|%d0, %1}"
    [(set_attr "type" "sse")
     (set_attr "atom_sse_attr" "rcp")
-@@ -14560,7 +14591,7 @@
+@@ -14560,7 +14594,7 @@
    [(set (match_operand:SF 0 "register_operand")
  	(unspec:SF [(match_operand:SF 1 "nonimmediate_operand")]
  		   UNSPEC_RSQRT))]
@@ -38625,7 +39088,7 @@ Index: gcc/config/i386/i386.md
  {
    ix86_emit_swsqrtsf (operands[0], operands[1], SFmode, 1);
    DONE;
-@@ -14589,7 +14620,7 @@
+@@ -14589,7 +14623,7 @@
     || (SSE_FLOAT_MODE_P (<MODE>mode) && TARGET_SSE_MATH)"
  {
    if (<MODE>mode == SFmode
@@ -41057,6 +41520,18 @@ Index: gcc/config/xtensa/xtensa.c
 +    case DImode:
      case DFmode:
        return (xtensa_uimm8x4 (v) && xtensa_uimm8x4 (v + 4));
+ 
+@@ -1582,9 +1583,9 @@
+       break;
+ 
+     case MULT: /* NAND */
+-      tmp = expand_simple_binop (SImode, XOR, old, ac.modemask,
++      tmp = expand_simple_binop (SImode, AND, old, val,
+ 				 NULL_RTX, 1, OPTAB_DIRECT);
+-      tmp = expand_simple_binop (SImode, AND, tmp, val,
++      tmp = expand_simple_binop (SImode, XOR, tmp, ac.modemask,
+ 				 new_rtx, 1, OPTAB_DIRECT);
+       break;
  
 Index: gcc/config/gnu-user.h
 ===================================================================
@@ -43566,7 +44041,15 @@ Index: gcc/config/pa/pa.md
 ===================================================================
 --- a/src/gcc/config/pa/pa.md	(.../tags/gcc_6_4_0_release)
 +++ b/src/gcc/config/pa/pa.md	(.../branches/gcc-6-branch)
-@@ -2536,24 +2536,40 @@
+@@ -84,6 +84,7 @@
+    UNSPEC_TLSGD_PIC
+    UNSPEC_TLSLDM_PIC
+    UNSPEC_TLSIE_PIC
++   UNSPEC_MEMORY_BARRIER
+   ])
+ 
+ ;; UNSPEC_VOLATILE:
+@@ -2536,24 +2537,40 @@
  
    xoperands[0] = operands[0];
    xoperands[1] = operands[1];
@@ -43621,7 +44104,7 @@ Index: gcc/config/pa/pa.md
      }
    return \"\";
  }"
-@@ -2570,25 +2586,33 @@
+@@ -2570,25 +2587,33 @@
  
    xoperands[0] = operands[0];
    xoperands[1] = operands[1];
@@ -43670,6 +44153,203 @@ Index: gcc/config/pa/pa.md
      }
    return \"\";
  }"
+@@ -9942,14 +9967,8 @@
+ ;; doubleword loads and stores are not guaranteed to be atomic
+ ;; when referencing the I/O address space.
+ 
+-;; The kernel cmpxchg operation on linux is not atomic with respect to
+-;; memory stores on SMP machines, so we must do stores using a cmpxchg
+-;; operation.
+-
+ ;; These patterns are at the bottom so the non atomic versions are preferred.
+ 
+-;; Implement atomic QImode store using exchange.
+-
+ (define_expand "atomic_storeqi"
+   [(match_operand:QI 0 "memory_operand")                ;; memory
+    (match_operand:QI 1 "register_operand")              ;; val out
+@@ -10002,26 +10021,8 @@
+   FAIL;
+ })
+ 
+-;; Implement atomic SFmode store using exchange.
++;; Implement atomic DImode load.
+ 
+-(define_expand "atomic_storesf"
+-  [(match_operand:SF 0 "memory_operand")                ;; memory
+-   (match_operand:SF 1 "register_operand")              ;; val out
+-   (match_operand:SI 2 "const_int_operand")]            ;; model
+-  ""
+-{
+-  if (TARGET_SYNC_LIBCALL)
+-    {
+-      rtx mem = operands[0];
+-      rtx val = operands[1];
+-      if (pa_maybe_emit_compare_and_swap_exchange_loop (NULL_RTX, mem, val))
+-	DONE;
+-    }
+-  FAIL;
+-})
+-
+-;; Implement atomic DImode load using 64-bit floating point load.
+-
+ (define_expand "atomic_loaddi"
+   [(match_operand:DI 0 "register_operand")              ;; val out
+    (match_operand:DI 1 "memory_operand")                ;; memory
+@@ -10035,29 +10036,27 @@
+ 
+   model = memmodel_from_int (INTVAL (operands[2]));
+   operands[1] = force_reg (SImode, XEXP (operands[1], 0));
+-  expand_mem_thread_fence (model);
+-  emit_insn (gen_atomic_loaddi_1 (operands[0], operands[1]));
+   if (is_mm_seq_cst (model))
+     expand_mem_thread_fence (model);
++  emit_insn (gen_atomic_loaddi_1 (operands[0], operands[1]));
++  expand_mem_thread_fence (model);
+   DONE;
+ })
+ 
+ (define_insn "atomic_loaddi_1"
+-  [(set (match_operand:DI 0 "register_operand" "=f,r")
+-        (mem:DI (match_operand:SI 1 "register_operand" "r,r")))
+-   (clobber (match_scratch:DI 2 "=X,f"))]
++  [(set (match_operand:DI 0 "register_operand" "=r")
++        (mem:DI (match_operand:SI 1 "register_operand" "r")))
++   (clobber (match_scratch:DI 2 "=f"))]
+   "!TARGET_64BIT && !TARGET_DISABLE_FPREGS && !TARGET_SOFT_FLOAT"
+-  "@
+-   {fldds|fldd} 0(%1),%0
+-   {fldds|fldd} 0(%1),%2\n\t{fstds|fstd} %2,-16(%%sp)\n\t{ldws|ldw} -16(%%sp),%0\n\t{ldws|ldw} -12(%%sp),%R0"
+-  [(set_attr "type" "move,move")
+-   (set_attr "length" "4,16")])
++  "{fldds|fldd} 0(%1),%2\n\t{fstds|fstd} %2,-16(%%sp)\n\t{ldws|ldw} -16(%%sp),%0\n\t{ldws|ldw} -12(%%sp),%R0"
++  [(set_attr "type" "move")
++   (set_attr "length" "16")])
+ 
+ ;; Implement atomic DImode store.
+ 
+ (define_expand "atomic_storedi"
+   [(match_operand:DI 0 "memory_operand")                ;; memory
+-   (match_operand:DI 1 "register_operand")              ;; val out
++   (match_operand:DI 1 "reg_or_cint_move_operand")      ;; val out
+    (match_operand:SI 2 "const_int_operand")]            ;; model
+   ""
+ {
+@@ -10076,6 +10075,8 @@
+ 
+   model = memmodel_from_int (INTVAL (operands[2]));
+   operands[0] = force_reg (SImode, XEXP (operands[0], 0));
++  if (operands[1] != CONST0_RTX (DImode))
++    operands[1] = force_reg (DImode, operands[1]);
+   expand_mem_thread_fence (model);
+   emit_insn (gen_atomic_storedi_1 (operands[0], operands[1]));
+   if (is_mm_seq_cst (model))
+@@ -10085,87 +10086,33 @@
+ 
+ (define_insn "atomic_storedi_1"
+   [(set (mem:DI (match_operand:SI 0 "register_operand" "r,r"))
+-        (match_operand:DI 1 "register_operand" "f,r"))
++        (match_operand:DI 1 "reg_or_0_operand" "M,r"))
+    (clobber (match_scratch:DI 2 "=X,f"))]
+-  "!TARGET_64BIT && !TARGET_DISABLE_FPREGS
+-   && !TARGET_SOFT_FLOAT && !TARGET_SYNC_LIBCALL"
++  "!TARGET_64BIT && !TARGET_DISABLE_FPREGS && !TARGET_SOFT_FLOAT"
+   "@
+-   {fstds|fstd} %1,0(%0)
++   {fstds|fstd} %%fr0,0(%0)
+    {stws|stw} %1,-16(%%sp)\n\t{stws|stw} %R1,-12(%%sp)\n\t{fldds|fldd} -16(%%sp),%2\n\t{fstds|fstd} %2,0(%0)"
+   [(set_attr "type" "move,move")
+    (set_attr "length" "4,16")])
+ 
+-;; Implement atomic DFmode load using 64-bit floating point load.
++;; PA 2.0 hardware supports out-of-order execution of loads and stores, so
++;; we need a memory barrier to enforce program order for memory references.
++;; Since we want PA 1.x code to be PA 2.0 compatible, we also need the
++;; barrier when generating PA 1.x code.
+ 
+-(define_expand "atomic_loaddf"
+-  [(match_operand:DF 0 "register_operand")              ;; val out
+-   (match_operand:DF 1 "memory_operand")                ;; memory
+-   (match_operand:SI 2 "const_int_operand")]            ;; model
++(define_expand "memory_barrier"
++  [(set (match_dup 0)
++        (unspec:BLK [(match_dup 0)] UNSPEC_MEMORY_BARRIER))]
+   ""
+ {
+-  enum memmodel model;
+-
+-  if (TARGET_64BIT || TARGET_DISABLE_FPREGS || TARGET_SOFT_FLOAT)
+-    FAIL;
+-
+-  model = memmodel_from_int (INTVAL (operands[2]));
+-  operands[1] = force_reg (SImode, XEXP (operands[1], 0));
+-  expand_mem_thread_fence (model);
+-  emit_insn (gen_atomic_loaddf_1 (operands[0], operands[1]));
+-  if (is_mm_seq_cst (model))
+-    expand_mem_thread_fence (model);
+-  DONE;
++  operands[0] = gen_rtx_MEM (BLKmode, gen_rtx_SCRATCH (Pmode));
++  MEM_VOLATILE_P (operands[0]) = 1;
+ })
+ 
+-(define_insn "atomic_loaddf_1"
+-  [(set (match_operand:DF 0 "register_operand" "=f,r")
+-        (mem:DF (match_operand:SI 1 "register_operand" "r,r")))
+-   (clobber (match_scratch:DF 2 "=X,f"))]
+-  "!TARGET_64BIT && !TARGET_DISABLE_FPREGS && !TARGET_SOFT_FLOAT"
+-  "@
+-   {fldds|fldd} 0(%1),%0
+-   {fldds|fldd} 0(%1),%2\n\t{fstds|fstd} %2,-16(%%sp)\n\t{ldws|ldw} -16(%%sp),%0\n\t{ldws|ldw} -12(%%sp),%R0"
+-  [(set_attr "type" "move,move")
+-   (set_attr "length" "4,16")])
+-
+-;; Implement atomic DFmode store using 64-bit floating point store.
+-
+-(define_expand "atomic_storedf"
+-  [(match_operand:DF 0 "memory_operand")                ;; memory
+-   (match_operand:DF 1 "register_operand")              ;; val out
+-   (match_operand:SI 2 "const_int_operand")]            ;; model
++(define_insn "*memory_barrier"
++  [(set (match_operand:BLK 0 "" "")
++        (unspec:BLK [(match_dup 0)] UNSPEC_MEMORY_BARRIER))]
+   ""
+-{
+-  enum memmodel model;
+-
+-  if (TARGET_SYNC_LIBCALL)
+-    {
+-      rtx mem = operands[0];
+-      rtx val = operands[1];
+-      if (pa_maybe_emit_compare_and_swap_exchange_loop (NULL_RTX, mem, val))
+-	DONE;
+-    }
+-
+-  if (TARGET_64BIT || TARGET_DISABLE_FPREGS || TARGET_SOFT_FLOAT)
+-    FAIL;
+-
+-  model = memmodel_from_int (INTVAL (operands[2]));
+-  operands[0] = force_reg (SImode, XEXP (operands[0], 0));
+-  expand_mem_thread_fence (model);
+-  emit_insn (gen_atomic_storedf_1 (operands[0], operands[1]));
+-  if (is_mm_seq_cst (model))
+-    expand_mem_thread_fence (model);
+-  DONE;
+-})
+-
+-(define_insn "atomic_storedf_1"
+-  [(set (mem:DF (match_operand:SI 0 "register_operand" "r,r"))
+-        (match_operand:DF 1 "register_operand" "f,r"))
+-   (clobber (match_scratch:DF 2 "=X,f"))]
+-  "!TARGET_64BIT && !TARGET_DISABLE_FPREGS
+-   && !TARGET_SOFT_FLOAT && !TARGET_SYNC_LIBCALL"
+-  "@
+-   {fstds|fstd} %1,0(%0)
+-   {stws|stw} %1,-16(%%sp)\n\t{stws|stw} %R1,-12(%%sp)\n\t{fldds|fldd} -16(%%sp),%2\n\t{fstds|fstd} %2,0(%0)"
+-  [(set_attr "type" "move,move")
+-   (set_attr "length" "4,16")])
++  "sync"
++  [(set_attr "type" "binary")
++   (set_attr "length" "4")])
 Index: gcc/config/pa/pa.opt
 ===================================================================
 --- a/src/gcc/config/pa/pa.opt	(.../tags/gcc_6_4_0_release)
