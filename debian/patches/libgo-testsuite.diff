@@ -1,0 +1,48 @@
+# DP: Only run the libgo testsuite for flags configured in RUNTESTFLAGS
+
+--- a/src/libgo/Makefile.am
++++ b/src/libgo/Makefile.am
+@@ -2376,6 +2376,12 @@ CHECK = \
+ 	export LD_LIBRARY_PATH; \
+ 	$(MKDIR_P) $(@D); \
+ 	rm -f $@-testsum $@-testlog; \
++	run_check=yes; \
++	MULTILIBDIR="$(MULTILIBDIR)"; \
++	case "$$MULTILIBDIR" in /64|/x32) \
++	  echo "$$RUNTESTFLAGS" | grep -q "$${MULTILIBDIR\#/*}" || run_check=; \
++	esac; \
++	if test "$$run_check" = "yes"; then \
+ 	if test "$(USE_DEJAGNU)" = "yes"; then \
+ 	  $(SHELL) $(srcdir)/testsuite/gotest --goarch=$(GOARCH) --goos=$(GOOS) --dejagnu=yes --basedir=$(srcdir) --srcdir=$(srcdir)/go/$(@D) --pkgpath="$(@D)" --pkgfiles="$(go_$(subst /,_,$(@D))_files)" --testname="$(@D)" $(GOTESTFLAGS) $(go_$(subst /,_,$(@D))_test_files); \
+ 	elif test "$(GOBENCH)" != ""; then \
+@@ -2391,6 +2397,7 @@ CHECK = \
+ 	    echo "FAIL: $(@D)" > $@-testsum; \
+ 	    exit 1; \
+ 	  fi; \
++	fi; \
+ 	fi
+ 
+ # Build all packages before checking any.
+--- a/src/libgo/Makefile.in
++++ b/src/libgo/Makefile.in
+@@ -2389,6 +2389,12 @@ CHECK = \
+ 	export LD_LIBRARY_PATH; \
+ 	$(MKDIR_P) $(@D); \
+ 	rm -f $@-testsum $@-testlog; \
++	run_check=yes; \
++	MULTILIBDIR="$(MULTILIBDIR)"; \
++	case "$$MULTILIBDIR" in /64|/x32) \
++	  echo "$$RUNTESTFLAGS" | grep -q "$${MULTILIBDIR\#/*}" || run_check=; \
++	esac; \
++	if test "$$run_check" = "yes"; then \
+ 	if test "$(USE_DEJAGNU)" = "yes"; then \
+ 	  $(SHELL) $(srcdir)/testsuite/gotest --goarch=$(GOARCH) --goos=$(GOOS) --dejagnu=yes --basedir=$(srcdir) --srcdir=$(srcdir)/go/$(@D) --pkgpath="$(@D)" --pkgfiles="$(go_$(subst /,_,$(@D))_files)" --testname="$(@D)" $(GOTESTFLAGS) $(go_$(subst /,_,$(@D))_test_files); \
+ 	elif test "$(GOBENCH)" != ""; then \
+@@ -2404,6 +2410,7 @@ CHECK = \
+ 	    echo "FAIL: $(@D)" > $@-testsum; \
+ 	    exit 1; \
+ 	  fi; \
++	fi; \
+ 	fi
+ 
+ 
